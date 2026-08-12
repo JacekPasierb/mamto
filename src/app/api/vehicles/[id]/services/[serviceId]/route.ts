@@ -3,7 +3,9 @@ import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 
 import {connectDB} from "@/lib/mongodb";
-import {SERVICE_TYPES} from "@/lib/serviceTypes";
+import {resolveNextDueAt} from "@/lib/serviceDefaults";
+import {resolveServiceWorkshop} from "@/lib/resolveServiceWorkshop";
+import {SERVICE_TYPES, type ServiceType} from "@/lib/serviceTypes";
 import Vehicle from "@/models/Vehicle";
 import VehicleService from "@/models/VehicleService";
 
@@ -41,6 +43,9 @@ export async function PUT(request: Request, context: RouteContext) {
       nextDueMileage,
       notes,
       cost,
+      performedBy,
+      workshopId,
+      workshopName,
     } = body;
 
     if (
@@ -80,6 +85,12 @@ export async function PUT(request: Request, context: RouteContext) {
 
     const serviceMileage = Number(mileage) || 0;
 
+    const workshopFields = await resolveServiceWorkshop(userId, {
+      performedBy,
+      workshopId,
+      workshopName,
+    });
+
     const service = await VehicleService.findOneAndUpdate(
       {
         _id: serviceId,
@@ -91,13 +102,20 @@ export async function PUT(request: Request, context: RouteContext) {
         title: title.trim(),
         performedAt: new Date(performedAt),
         mileage: serviceMileage,
-        nextDueAt: nextDueAt ? new Date(nextDueAt) : null,
+        nextDueAt: resolveNextDueAt(
+          type as ServiceType,
+          performedAt,
+          nextDueAt
+        ),
         nextDueMileage:
           nextDueMileage === "" || nextDueMileage == null
             ? null
             : Number(nextDueMileage),
         notes: notes?.trim() || "",
         cost: cost === "" || cost == null ? null : Number(cost),
+        performedBy: workshopFields.performedBy,
+        workshopId: workshopFields.workshopId,
+        workshopName: workshopFields.workshopName,
       },
       {
         new: true,
@@ -119,6 +137,10 @@ export async function PUT(request: Request, context: RouteContext) {
     return NextResponse.json(service);
   } catch (error) {
     console.error("PUT vehicle service error:", error);
+
+    if (error instanceof Error && error.message === "Podaj nazwę warsztatu") {
+      return NextResponse.json({message: error.message}, {status: 400});
+    }
 
     return NextResponse.json(
       {message: "Nie udało się zaktualizować serwisu"},

@@ -1,6 +1,10 @@
 import mongoose, {Schema, models} from "mongoose";
 
-import {STOCK_CATEGORIES, STOCK_UNITS} from "@/lib/stockTypes";
+import {
+  STOCK_CATEGORIES,
+  STOCK_UNITS,
+  USAGE_MODES,
+} from "@/lib/stockTypes";
 
 const StockItemSchema = new Schema(
   {
@@ -21,9 +25,36 @@ const StockItemSchema = new Schema(
       default: "medicine",
     },
 
+    usageMode: {
+      type: String,
+      enum: USAGE_MODES,
+      default: "static",
+    },
+
+    // Lek codzienny
+    stock: {
+      type: Number,
+      default: null,
+    },
+
+    stockDate: {
+      type: Date,
+      default: null,
+    },
+
+    dailyUsage: {
+      type: Number,
+      default: null,
+    },
+
+    reminderThreshold: {
+      type: Number,
+      default: null,
+    },
+
+    // Zapas statyczny
     quantity: {
       type: Number,
-      required: true,
       default: 0,
     },
 

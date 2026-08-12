@@ -1,6 +1,7 @@
 import mongoose, {Schema, models} from "mongoose";
 
 import {SERVICE_TYPES} from "@/lib/serviceTypes";
+import {PERFORMED_BY_OPTIONS} from "@/lib/workshopTypes";
 
 const VehicleServiceSchema = new Schema(
   {
@@ -45,6 +46,23 @@ const VehicleServiceSchema = new Schema(
 
     nextDueMileage: {
       type: Number,
+      default: null,
+    },
+
+    performedBy: {
+      type: String,
+      enum: PERFORMED_BY_OPTIONS,
+      default: "other",
+    },
+
+    workshopId: {
+      type: Schema.Types.ObjectId,
+      ref: "Workshop",
+      default: null,
+    },
+
+    workshopName: {
+      type: String,
       default: null,
     },
 

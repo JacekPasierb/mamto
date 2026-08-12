@@ -9,6 +9,9 @@ import {
   SERVICE_TYPES,
   type ServiceType,
 } from "@/lib/serviceTypes";
+import {
+  getServiceWorkshopDisplay,
+} from "@/lib/workshopTypes";
 import ServiceFormModal, {type ServiceFormValues} from "./ServiceFormModal";
 import ServiceMileageTimeline from "./ServiceMileageTimeline";
 
@@ -273,7 +276,10 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
           </div>
         ) : (
           <ul className="mt-2 divide-y divide-[var(--mt-line)] border-b border-[var(--mt-line)]">
-            {filteredServices.map((service) => (
+            {filteredServices.map((service) => {
+              const workshopDisplay = getServiceWorkshopDisplay(service);
+
+              return (
               <li key={service._id} className="py-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
@@ -295,6 +301,14 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
                           })}`
                         : ""}
                     </p>
+                    {workshopDisplay ? (
+                      <p className="mt-1 text-sm text-[var(--mt-muted)]">
+                        <span className="font-medium text-[var(--mt-ink)]">
+                          {workshopDisplay.label}:
+                        </span>{" "}
+                        {workshopDisplay.value}
+                      </p>
+                    ) : null}
                     {(service.nextDueAt || service.nextDueMileage != null) && (
                       <p className="mt-2 text-sm text-[var(--mt-ink)]">
                         Następny:{" "}
@@ -335,7 +349,8 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
                   </div>
                 </div>
               </li>
-            ))}
+            );
+            })}
           </ul>
         )}
 

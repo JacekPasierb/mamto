@@ -2,8 +2,12 @@ import {auth} from "@clerk/nextjs/server";
 import {NextResponse} from "next/server";
 
 import {connectDB} from "@/lib/mongodb";
-import {STOCK_CATEGORIES, STOCK_UNITS} from "@/lib/stockTypes";
+import {parseCalendarDate, todayCalendarDate} from "@/lib/calculateCurrentStock";
+import {enrichStockItem} from "@/lib/stockHelpers";
+import {STOCK_CATEGORIES, STOCK_UNITS, USAGE_MODES} from "@/lib/stockTypes";
 import StockItem from "@/models/StockItem";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -19,7 +23,16 @@ export async function GET() {
       name: 1,
     });
 
-    return NextResponse.json(items);
+    const now = todayCalendarDate();
+
+    return NextResponse.json(
+      items.map((item) => enrichStockItem(item.toObject(), now)),
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
   } catch (error) {
     console.error("GET stock error:", error);
 
@@ -39,8 +52,20 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const {name, category, quantity, unit, minQuantity, expiresAt, notes} =
-      body;
+    const {
+      name,
+      category,
+      usageMode,
+      stock,
+      stockDate,
+      dailyUsage,
+      reminderThreshold,
+      quantity,
+      unit,
+      minQuantity,
+      expiresAt,
+      notes,
+    } = body;
 
     if (!name?.trim()) {
       return NextResponse.json(
@@ -59,6 +84,16 @@ export async function POST(request: Request) {
       );
     }
 
+    if (
+      usageMode &&
+      !USAGE_MODES.includes(usageMode as (typeof USAGE_MODES)[number])
+    ) {
+      return NextResponse.json(
+        {message: "Nieprawidłowy tryb zużycia"},
+        {status: 400}
+      );
+    }
+
     if (unit && !STOCK_UNITS.includes(unit as (typeof STOCK_UNITS)[number])) {
       return NextResponse.json(
         {message: "Nieprawidłowa jednostka"},
@@ -68,10 +103,47 @@ export async function POST(request: Request) {
 
     await connectDB();
 
+    const isDaily = usageMode === "daily";
+
+    if (isDaily) {
+      if (!stockDate) {
+        return NextResponse.json(
+          {message: "Data ustawienia stanu jest wymagana"},
+          {status: 400}
+        );
+      }
+
+      if (!dailyUsage || Number(dailyUsage) <= 0) {
+        return NextResponse.json(
+          {message: "Dzienne zużycie musi być większe od zera"},
+          {status: 400}
+        );
+      }
+
+      const item = await StockItem.create({
+        userId,
+        name: name.trim(),
+        category: category || "medicine",
+        usageMode: "daily",
+        stock: Number(stock) || 0,
+        stockDate: parseCalendarDate(stockDate),
+        dailyUsage: Number(dailyUsage),
+        reminderThreshold: Number(reminderThreshold) || 0,
+        unit: unit || "tabletek",
+        notes: notes?.trim() || "",
+      });
+
+      return NextResponse.json(
+        enrichStockItem(item.toObject()),
+        {status: 201}
+      );
+    }
+
     const item = await StockItem.create({
       userId,
       name: name.trim(),
       category: category || "medicine",
+      usageMode: "static",
       quantity: Number(quantity) || 0,
       unit: unit || "szt.",
       minQuantity: Number(minQuantity) || 1,
@@ -79,7 +151,7 @@ export async function POST(request: Request) {
       notes: notes?.trim() || "",
     });
 
-    return NextResponse.json(item, {status: 201});
+    return NextResponse.json(enrichStockItem(item.toObject()), {status: 201});
   } catch (error) {
     console.error("POST stock error:", error);
 

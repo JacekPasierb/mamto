@@ -5,6 +5,7 @@ import {
   SERVICE_TYPE_LABELS,
   type ServiceType,
 } from "@/lib/serviceTypes";
+import {getServiceWorkshopDisplay} from "@/lib/workshopTypes";
 
 type TimelineService = {
   _id: string;
@@ -13,6 +14,8 @@ type TimelineService = {
   mileage: number;
   performedAt: string;
   nextDueMileage: number | null;
+  performedBy?: string | null;
+  workshopName?: string | null;
 };
 
 type ServiceMileageTimelineProps = {
@@ -143,7 +146,16 @@ const ServiceMileageTimeline = ({
       <ol className="relative mt-10">
         <span className="absolute top-2 bottom-2 left-[0.35rem] w-px bg-[var(--mt-line)]" />
 
-        {points.map((point) => (
+        {points.map((point) => {
+          const sourceService =
+            point.kind === "service"
+              ? services.find((service) => service._id === point.id)
+              : null;
+          const workshopDisplay = sourceService
+            ? getServiceWorkshopDisplay(sourceService)
+            : null;
+
+          return (
           <li key={point.id} className="relative flex gap-5 py-5 pl-1">
             <span
               className={`relative z-10 mt-1.5 h-2.5 w-2.5 shrink-0 rounded-sm ${
@@ -182,6 +194,12 @@ const ServiceMileageTimeline = ({
                   : point.title}
               </p>
 
+              {workshopDisplay ? (
+                <p className="mt-1 text-xs text-[var(--mt-muted)]">
+                  {workshopDisplay.label}: {workshopDisplay.value}
+                </p>
+              ) : null}
+
               {point.kind === "due" ? (
                 <p className="mt-1 text-xs text-[var(--mt-muted)]">
                   Planowany przebieg · {SERVICE_TYPE_LABELS[point.type]}
@@ -189,7 +207,8 @@ const ServiceMileageTimeline = ({
               ) : null}
             </div>
           </li>
-        ))}
+        );
+        })}
       </ol>
     </section>
   );

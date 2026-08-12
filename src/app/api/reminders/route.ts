@@ -2,7 +2,9 @@ import {auth} from "@clerk/nextjs/server";
 import {NextResponse} from "next/server";
 
 import {connectDB} from "@/lib/mongodb";
+import {todayCalendarDate} from "@/lib/calculateCurrentStock";
 import {SERVICE_TYPE_LABELS, type ServiceType} from "@/lib/serviceTypes";
+import {enrichStockItem} from "@/lib/stockHelpers";
 import {STOCK_CATEGORY_LABELS, type StockCategory} from "@/lib/stockTypes";
 import StockItem from "@/models/StockItem";
 import Vehicle from "@/models/Vehicle";
@@ -12,6 +14,8 @@ const URGENT_DAYS = 14;
 const UPCOMING_DAYS = 60;
 const URGENT_KM = 500;
 const UPCOMING_KM = 2000;
+
+export const dynamic = "force-dynamic";
 
 const DEFAULT_INTERVALS: Partial<
   Record<
@@ -38,6 +42,11 @@ export type ReminderItem = {
   reason: string;
   tone: "urgent" | "upcoming";
   sortKey: number;
+  refill?: {
+    usageMode: "daily" | "static";
+    unit: string;
+    currentStock: number;
+  };
 };
 
 type LeanService = {
@@ -61,9 +70,14 @@ type LeanStockItem = {
   _id: unknown;
   name: string;
   category: StockCategory;
-  quantity: number;
+  usageMode?: "static" | "daily";
+  quantity?: number;
   unit: string;
-  minQuantity: number;
+  minQuantity?: number;
+  stock?: number;
+  stockDate?: Date | null;
+  dailyUsage?: number;
+  reminderThreshold?: number;
   expiresAt?: Date | null;
 };
 
@@ -153,7 +167,7 @@ export async function GET() {
       }
     }
 
-    const now = new Date();
+    const now = todayCalendarDate();
     now.setHours(0, 0, 0, 0);
 
     const urgent: ReminderItem[] = [];
@@ -216,23 +230,35 @@ export async function GET() {
     expiryLimit.setDate(expiryLimit.getDate() + 30);
 
     for (const item of stockItems) {
-      const low = item.quantity <= item.minQuantity;
+      const enriched = enrichStockItem(item, now);
       const expiresAt = item.expiresAt ? new Date(item.expiresAt) : null;
       if (expiresAt) expiresAt.setHours(0, 0, 0, 0);
 
       const expiring =
         expiresAt != null && expiresAt.getTime() <= expiryLimit.getTime();
 
-      if (!low && !expiring) continue;
+      if (!enriched.isUrgent && !expiring) continue;
 
       const reasons: string[] = [];
 
-      if (low) {
-        reasons.push(
-          item.quantity <= 0
-            ? "brak na stanie"
-            : `zostało ${item.quantity} ${item.unit} (próg ${item.minQuantity})`
-        );
+      if (enriched.isUrgent) {
+        if (enriched.usageMode === "daily") {
+          const daysLabel =
+            enriched.daysRemaining != null
+              ? ` · zapas na ~${enriched.daysRemaining} dni`
+              : "";
+          reasons.push(
+            enriched.currentStock <= 0
+              ? "brak na stanie"
+              : `zostało ${enriched.currentStock} ${item.unit} (próg ${item.reminderThreshold})${daysLabel}`
+          );
+        } else {
+          reasons.push(
+            enriched.currentStock <= 0
+              ? "brak na stanie"
+              : `zostało ${enriched.currentStock} ${item.unit} (próg ${item.minQuantity})`
+          );
+        }
       }
 
       if (expiring && expiresAt) {
@@ -253,7 +279,14 @@ export async function GET() {
         href: "/stock",
         reason: reasons.join(" · "),
         tone: "urgent",
-        sortKey: low ? item.quantity : daysUntil(expiresAt!, now),
+        sortKey: enriched.isUrgent
+          ? enriched.currentStock
+          : daysUntil(expiresAt!, now),
+        refill: {
+          usageMode: enriched.usageMode,
+          unit: item.unit,
+          currentStock: enriched.currentStock,
+        },
       });
     }
 

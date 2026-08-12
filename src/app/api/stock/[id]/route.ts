@@ -3,7 +3,9 @@ import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 
 import {connectDB} from "@/lib/mongodb";
-import {STOCK_CATEGORIES, STOCK_UNITS} from "@/lib/stockTypes";
+import {parseCalendarDate, todayCalendarDate} from "@/lib/calculateCurrentStock";
+import {enrichStockItem} from "@/lib/stockHelpers";
+import {STOCK_CATEGORIES, STOCK_UNITS, USAGE_MODES} from "@/lib/stockTypes";
 import StockItem from "@/models/StockItem";
 
 type RouteContext = {
@@ -27,8 +29,20 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const body = await request.json();
-    const {name, category, quantity, unit, minQuantity, expiresAt, notes} =
-      body;
+    const {
+      name,
+      category,
+      usageMode,
+      stock,
+      stockDate,
+      dailyUsage,
+      reminderThreshold,
+      quantity,
+      unit,
+      minQuantity,
+      expiresAt,
+      notes,
+    } = body;
 
     if (!name?.trim()) {
       return NextResponse.json(
@@ -47,6 +61,16 @@ export async function PUT(request: Request, context: RouteContext) {
       );
     }
 
+    if (
+      usageMode &&
+      !USAGE_MODES.includes(usageMode as (typeof USAGE_MODES)[number])
+    ) {
+      return NextResponse.json(
+        {message: "Nieprawidłowy tryb zużycia"},
+        {status: 400}
+      );
+    }
+
     if (unit && !STOCK_UNITS.includes(unit as (typeof STOCK_UNITS)[number])) {
       return NextResponse.json(
         {message: "Nieprawidłowa jednostka"},
@@ -56,19 +80,36 @@ export async function PUT(request: Request, context: RouteContext) {
 
     await connectDB();
 
-    const item = await StockItem.findOneAndUpdate(
-      {_id: id, userId},
-      {
-        name: name.trim(),
-        category: category || "medicine",
-        quantity: Number(quantity) || 0,
-        unit: unit || "szt.",
-        minQuantity: Number(minQuantity) || 1,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
-        notes: notes?.trim() || "",
-      },
-      {new: true}
-    );
+    const isDaily = usageMode === "daily";
+
+    const update = isDaily
+      ? {
+          name: name.trim(),
+          category: category || "medicine",
+          usageMode: "daily" as const,
+          stock: Number(stock) || 0,
+          stockDate: stockDate
+            ? parseCalendarDate(stockDate)
+            : todayCalendarDate(),
+          dailyUsage: Number(dailyUsage) || 0,
+          reminderThreshold: Number(reminderThreshold) || 0,
+          unit: unit || "tabletek",
+          notes: notes?.trim() || "",
+        }
+      : {
+          name: name.trim(),
+          category: category || "medicine",
+          usageMode: "static" as const,
+          quantity: Number(quantity) || 0,
+          unit: unit || "szt.",
+          minQuantity: Number(minQuantity) || 1,
+          expiresAt: expiresAt ? new Date(expiresAt) : null,
+          notes: notes?.trim() || "",
+        };
+
+    const item = await StockItem.findOneAndUpdate({_id: id, userId}, update, {
+      new: true,
+    });
 
     if (!item) {
       return NextResponse.json(
@@ -77,7 +118,7 @@ export async function PUT(request: Request, context: RouteContext) {
       );
     }
 
-    return NextResponse.json(item);
+    return NextResponse.json(enrichStockItem(item.toObject(), todayCalendarDate()));
   } catch (error) {
     console.error("PUT stock error:", error);
 

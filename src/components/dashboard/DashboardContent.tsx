@@ -1,6 +1,8 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
+
+import RefillStockModal from "@/components/stock/RefillStockModal";
 
 import AppShell from "./AppShell";
 import DashboardHeader from "./DashboardHeader";
@@ -21,27 +23,30 @@ const DashboardContent = () => {
     stock: [],
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [refillItem, setRefillItem] = useState<ReminderListItem | null>(null);
+
+  const loadReminders = useCallback(async () => {
+    const response = await fetch("/api/reminders", {cache: "no-store"});
+
+    if (!response.ok) {
+      throw new Error("Nie udało się pobrać przypomnień");
+    }
+
+    const data = await response.json();
+
+    setReminders({
+      urgent: data.urgent || [],
+      upcoming: data.upcoming || [],
+      stock: data.stock || [],
+    });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
       try {
-        const response = await fetch("/api/reminders");
-
-        if (!response.ok) {
-          throw new Error("Nie udało się pobrać przypomnień");
-        }
-
-        const data = await response.json();
-
-        if (!cancelled) {
-          setReminders({
-            urgent: data.urgent || [],
-            upcoming: data.upcoming || [],
-            stock: data.stock || [],
-          });
-        }
+        await loadReminders();
       } catch (error) {
         console.error(error);
       } finally {
@@ -56,7 +61,21 @@ const DashboardContent = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadReminders]);
+
+  const handleRefill = (item: ReminderListItem) => {
+    setRefillItem(item);
+  };
+
+  const handleRefilled = async () => {
+    setRefillItem(null);
+
+    try {
+      await loadReminders();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <AppShell>
@@ -103,10 +122,24 @@ const DashboardContent = () => {
               tone="ok"
               items={reminders.stock}
               isLoading={isLoading}
+              onRefill={handleRefill}
             />
           </div>
         </div>
       </div>
+
+      {refillItem?.refill ? (
+        <RefillStockModal
+          isOpen={Boolean(refillItem)}
+          itemId={refillItem.id}
+          itemName={refillItem.title}
+          usageMode={refillItem.refill.usageMode}
+          unit={refillItem.refill.unit}
+          currentStock={refillItem.refill.currentStock}
+          onClose={() => setRefillItem(null)}
+          onRefilled={handleRefilled}
+        />
+      ) : null}
     </AppShell>
   );
 };

@@ -3,29 +3,37 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
 
 import AppShell from "@/components/dashboard/AppShell";
+import {toDateInputValue} from "@/lib/calculateCurrentStock";
 import {
   STOCK_CATEGORIES,
   STOCK_CATEGORY_LABELS,
   type StockCategory,
   type StockUnit,
+  type UsageMode,
 } from "@/lib/stockTypes";
+import RefillStockModal from "./RefillStockModal";
 import StockFormModal, {type StockItemFormValues} from "./StockFormModal";
 
 type StockItem = StockItemFormValues & {
   category: StockCategory;
   unit: StockUnit;
+  usageMode: UsageMode;
+  currentStock: number;
+  daysRemaining: number | null;
+  isUrgent: boolean;
 };
 
 type StockTab = "all" | "low" | StockCategory;
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("pl-PL", {
+const formatDate = (value: string) => {
+  const [year, month, day] = toDateInputValue(value).split("-").map(Number);
+
+  return new Intl.DateTimeFormat("pl-PL", {
     day: "numeric",
     month: "long",
     year: "numeric",
-  }).format(new Date(value));
-
-const isLow = (item: StockItem) => item.quantity <= item.minQuantity;
+  }).format(new Date(year, month - 1, day));
+};
 
 const isExpiringSoon = (item: StockItem) => {
   if (!item.expiresAt) return false;
@@ -44,10 +52,19 @@ const StockPage = () => {
   const [activeTab, setActiveTab] = useState<StockTab>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
+  const [refillItem, setRefillItem] = useState<StockItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const mergeItem = useCallback((updated: StockItem) => {
+    setItems((prev) =>
+      prev.map((item) =>
+        item._id === updated._id ? {...item, ...updated} : item
+      )
+    );
+  }, []);
+
   const loadItems = useCallback(async () => {
-    const response = await fetch("/api/stock");
+    const response = await fetch("/api/stock", {cache: "no-store"});
 
     if (!response.ok) {
       throw new Error("Nie udało się pobrać zapasów");
@@ -82,7 +99,7 @@ const StockPage = () => {
   const counts = useMemo(() => {
     const result: Record<StockTab, number> = {
       all: items.length,
-      low: items.filter(isLow).length,
+      low: items.filter((item) => item.isUrgent).length,
       medicine: 0,
       supplements: 0,
       lenses: 0,
@@ -99,7 +116,7 @@ const StockPage = () => {
 
   const filteredItems = useMemo(() => {
     if (activeTab === "all") return items;
-    if (activeTab === "low") return items.filter(isLow);
+    if (activeTab === "low") return items.filter((item) => item.isUrgent);
     return items.filter((item) => item.category === activeTab);
   }, [items, activeTab]);
 
@@ -164,8 +181,8 @@ const StockPage = () => {
             </p>
             <h1 className="font-display mt-3 text-4xl tracking-tight">Zapasy</h1>
             <p className="mt-3 max-w-lg text-[var(--mt-muted)]">
-              Leki, soczewki i rzeczy, których nie może zabraknąć — zanim
-              skończą się w najmniej oczekiwanym momencie.
+              Leki codzienne liczą się same — bez cronów i ręcznych wpisów
+              każdego dnia.
             </p>
           </div>
 
@@ -244,8 +261,8 @@ const StockPage = () => {
         ) : (
           <ul className="mt-2 divide-y divide-[var(--mt-line)] border-b border-[var(--mt-line)]">
             {filteredItems.map((item) => {
-              const low = isLow(item);
               const expiring = isExpiringSoon(item);
+              const isDaily = item.usageMode === "daily";
 
               return (
                 <li key={item._id} className="py-6">
@@ -255,9 +272,9 @@ const StockPage = () => {
                         <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[var(--mt-accent)]">
                           {STOCK_CATEGORY_LABELS[item.category]}
                         </p>
-                        {low ? (
+                        {item.isUrgent ? (
                           <span className="text-[0.65rem] uppercase tracking-[0.16em] text-[var(--mt-signal)]">
-                            Kończy się
+                            Pilne
                           </span>
                         ) : null}
                         {expiring ? (
@@ -271,22 +288,50 @@ const StockPage = () => {
                         {item.name}
                       </h2>
 
-                      <p className="mt-2 text-sm text-[var(--mt-muted)]">
-                        Stan:{" "}
-                        <span
-                          className={`font-medium tabular-nums ${
-                            low
-                              ? "text-[var(--mt-signal)]"
-                              : "text-[var(--mt-ink)]"
-                          }`}
-                        >
-                          {item.quantity} {item.unit}
-                        </span>
-                        <span className="text-[var(--mt-muted)]">
-                          {" "}
-                          · próg {item.minQuantity} {item.unit}
-                        </span>
-                      </p>
+                      {isDaily ? (
+                        <>
+                          <p className="mt-2 text-sm text-[var(--mt-muted)]">
+                            Aktualny stan:{" "}
+                            <span
+                              className={`font-medium tabular-nums ${
+                                item.isUrgent
+                                  ? "text-[var(--mt-signal)]"
+                                  : "text-[var(--mt-ink)]"
+                              }`}
+                            >
+                              {item.currentStock} {item.unit}
+                            </span>
+                          </p>
+                          <p className="mt-1 text-sm text-[var(--mt-muted)]">
+                            Zużycie: {item.dailyUsage} {item.unit} dziennie
+                            {item.daysRemaining != null
+                              ? ` · zapas na ~${item.daysRemaining} dni`
+                              : ""}
+                          </p>
+                          {item.stockDate ? (
+                            <p className="mt-1 text-sm text-[var(--mt-muted)]">
+                              Stan od: {formatDate(item.stockDate)}
+                            </p>
+                          ) : null}
+                        </>
+                      ) : (
+                        <p className="mt-2 text-sm text-[var(--mt-muted)]">
+                          Stan:{" "}
+                          <span
+                            className={`font-medium tabular-nums ${
+                              item.isUrgent
+                                ? "text-[var(--mt-signal)]"
+                                : "text-[var(--mt-ink)]"
+                            }`}
+                          >
+                            {item.currentStock} {item.unit}
+                          </span>
+                          <span className="text-[var(--mt-muted)]">
+                            {" "}
+                            · próg {item.minQuantity} {item.unit}
+                          </span>
+                        </p>
+                      )}
 
                       {item.expiresAt ? (
                         <p className="mt-2 text-sm text-[var(--mt-ink)]">
@@ -301,7 +346,14 @@ const StockPage = () => {
                       ) : null}
                     </div>
 
-                    <div className="flex shrink-0 gap-4 self-start">
+                    <div className="flex shrink-0 flex-wrap gap-4 self-start">
+                      <button
+                        type="button"
+                        onClick={() => setRefillItem(item)}
+                        className="text-sm font-medium text-[var(--mt-ink)] underline-offset-4 transition hover:text-[var(--mt-accent)] hover:underline"
+                      >
+                        Uzupełnij zapas
+                      </button>
                       <button
                         type="button"
                         onClick={() => openEditModal(item)}
@@ -332,6 +384,22 @@ const StockPage = () => {
         onClose={closeModal}
         onSaved={loadItems}
       />
+
+      {refillItem ? (
+        <RefillStockModal
+          isOpen={Boolean(refillItem)}
+          itemId={refillItem._id}
+          itemName={refillItem.name}
+          usageMode={refillItem.usageMode}
+          unit={refillItem.unit}
+          currentStock={refillItem.currentStock}
+          onClose={() => setRefillItem(null)}
+          onRefilled={(updated) => {
+            mergeItem(updated as StockItem);
+            setRefillItem(null);
+          }}
+        />
+      ) : null}
     </AppShell>
   );
 };

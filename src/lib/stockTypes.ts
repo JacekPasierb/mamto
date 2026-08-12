@@ -26,3 +26,7 @@ export const STOCK_UNITS = [
 ] as const;
 
 export type StockUnit = (typeof STOCK_UNITS)[number];
+
+export const USAGE_MODES = ["static", "daily"] as const;
+
+export type UsageMode = (typeof USAGE_MODES)[number];

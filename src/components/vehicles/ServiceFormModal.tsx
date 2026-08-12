@@ -6,6 +6,13 @@ import {
   SERVICE_TYPE_LABELS,
   type ServiceType,
 } from "@/lib/serviceTypes";
+import {addYearsToDateInput} from "@/lib/serviceDefaults";
+import {
+  PERFORMED_BY_OPTIONS,
+  PERFORMED_BY_LABELS,
+  type PerformedBy,
+} from "@/lib/workshopTypes";
+import WorkshopCombobox from "./WorkshopCombobox";
 
 export type ServiceFormValues = {
   _id: string;
@@ -15,6 +22,9 @@ export type ServiceFormValues = {
   mileage: number;
   nextDueAt: string | null;
   nextDueMileage: number | null;
+  performedBy: PerformedBy;
+  workshopId: string | null;
+  workshopName: string | null;
   notes: string;
   cost: number | null;
 };
@@ -60,6 +70,9 @@ const ServiceFormModal = ({
   const [mileage, setMileage] = useState(String(currentMileage || ""));
   const [nextDueAt, setNextDueAt] = useState("");
   const [nextDueMileage, setNextDueMileage] = useState("");
+  const [performedBy, setPerformedBy] = useState<PerformedBy>("workshop");
+  const [workshopId, setWorkshopId] = useState<string | null>(null);
+  const [workshopName, setWorkshopName] = useState("");
   const [notes, setNotes] = useState("");
   const [cost, setCost] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -77,6 +90,9 @@ const ServiceFormModal = ({
       setNextDueMileage(
         service.nextDueMileage == null ? "" : String(service.nextDueMileage)
       );
+      setPerformedBy(service.performedBy || "other");
+      setWorkshopId(service.workshopId ? String(service.workshopId) : null);
+      setWorkshopName(service.workshopName || "");
       setNotes(service.notes || "");
       setCost(service.cost == null ? "" : String(service.cost));
     } else {
@@ -86,6 +102,9 @@ const ServiceFormModal = ({
       setMileage(String(currentMileage || ""));
       setNextDueAt("");
       setNextDueMileage("");
+      setPerformedBy("workshop");
+      setWorkshopId(null);
+      setWorkshopName("");
       setNotes("");
       setCost("");
     }
@@ -100,6 +119,27 @@ const ServiceFormModal = ({
 
     if (!isEditing || title === SERVICE_TYPE_LABELS[type]) {
       setTitle(SERVICE_TYPE_LABELS[value]);
+    }
+
+    if (value === "inspection") {
+      setNextDueAt(addYearsToDateInput(performedAt, 1));
+    }
+  };
+
+  const handlePerformedAtChange = (value: string) => {
+    setPerformedAt(value);
+
+    if (type === "inspection") {
+      setNextDueAt(addYearsToDateInput(value, 1));
+    }
+  };
+
+  const handlePerformedByChange = (value: PerformedBy) => {
+    setPerformedBy(value);
+
+    if (value !== "workshop") {
+      setWorkshopId(null);
+      setWorkshopName("");
     }
   };
 
@@ -117,6 +157,9 @@ const ServiceFormModal = ({
         mileage,
         nextDueAt: nextDueAt || null,
         nextDueMileage: nextDueMileage || null,
+        performedBy,
+        workshopId: performedBy === "workshop" ? workshopId : null,
+        workshopName: performedBy === "workshop" ? workshopName : null,
         notes,
         cost: cost || null,
       };
@@ -217,6 +260,41 @@ const ServiceFormModal = ({
             />
           </div>
 
+          <div>
+            <label className="mb-3 block text-sm text-[var(--mt-muted)]">
+              Wykonane przez
+            </label>
+            <div className="space-y-2">
+              {PERFORMED_BY_OPTIONS.map((option) => (
+                <label
+                  key={option}
+                  className="flex items-center gap-3 text-sm text-[var(--mt-ink)]"
+                >
+                  <input
+                    type="radio"
+                    name="performedBy"
+                    value={option}
+                    checked={performedBy === option}
+                    onChange={() => handlePerformedByChange(option)}
+                    className="h-4 w-4 accent-[var(--mt-accent)]"
+                  />
+                  {PERFORMED_BY_LABELS[option]}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {performedBy === "workshop" ? (
+            <WorkshopCombobox
+              value={workshopName}
+              workshopId={workshopId}
+              onChange={(name, id) => {
+                setWorkshopName(name);
+                setWorkshopId(id);
+              }}
+            />
+          ) : null}
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-2 block text-sm text-[var(--mt-muted)]">
@@ -225,7 +303,7 @@ const ServiceFormModal = ({
               <input
                 type="date"
                 value={performedAt}
-                onChange={(e) => setPerformedAt(e.target.value)}
+                onChange={(e) => handlePerformedAtChange(e.target.value)}
                 required
                 className={fieldClass}
               />
@@ -297,7 +375,7 @@ const ServiceFormModal = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="Warsztat, części, uwagi…"
+              placeholder="Części, uwagi…"
               className={`${fieldClass} resize-y`}
             />
           </div>

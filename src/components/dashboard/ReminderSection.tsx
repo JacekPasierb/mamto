@@ -6,6 +6,11 @@ export type ReminderListItem = {
   subtitle: string;
   href: string;
   reason: string;
+  refill?: {
+    usageMode: "daily" | "static";
+    unit: string;
+    currentStock: number;
+  };
 };
 
 type ReminderSectionProps = {
@@ -15,6 +20,7 @@ type ReminderSectionProps = {
   tone?: "signal" | "default" | "ok";
   items?: ReminderListItem[];
   isLoading?: boolean;
+  onRefill?: (item: ReminderListItem) => void;
 };
 
 const toneAccent = {
@@ -30,6 +36,7 @@ const ReminderSection = ({
   tone = "default",
   items = [],
   isLoading = false,
+  onRefill,
 }: ReminderSectionProps) => {
   return (
     <section>
@@ -57,23 +64,32 @@ const ReminderSection = ({
         <ul className="mt-5 divide-y divide-[var(--mt-line)] border-y border-[var(--mt-line)] bg-white/45">
           {items.map((item) => (
             <li key={item.id}>
-              <Link
-                href={item.href}
-                className="group block px-4 py-4 transition hover:bg-white/90"
-              >
-                <p className="font-display text-[1.05rem] tracking-tight transition group-hover:text-[var(--mt-accent)]">
-                  {item.title}
-                </p>
-                <p className="mt-1 text-sm text-[var(--mt-muted)]">
-                  {item.subtitle}
-                </p>
-                <p
-                  className="mt-2 text-sm font-medium"
-                  style={{color: toneAccent[tone]}}
-                >
-                  {item.reason}
-                </p>
-              </Link>
+              <div className="flex items-start justify-between gap-4 px-4 py-4 transition hover:bg-white/90">
+                <Link href={item.href} className="group min-w-0 flex-1">
+                  <p className="font-display text-[1.05rem] tracking-tight transition group-hover:text-[var(--mt-accent)]">
+                    {item.title}
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--mt-muted)]">
+                    {item.subtitle}
+                  </p>
+                  <p
+                    className="mt-2 text-sm font-medium"
+                    style={{color: toneAccent[tone]}}
+                  >
+                    {item.reason}
+                  </p>
+                </Link>
+
+                {item.refill && onRefill ? (
+                  <button
+                    type="button"
+                    onClick={() => onRefill(item)}
+                    className="shrink-0 text-sm font-medium text-[var(--mt-ink)] underline-offset-4 transition hover:text-[var(--mt-accent)] hover:underline"
+                  >
+                    Uzupełnij zapas
+                  </button>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

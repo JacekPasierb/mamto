@@ -3,8 +3,10 @@ import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 
 import {connectDB} from "@/lib/mongodb";
+import {resolveNextDueAt} from "@/lib/serviceDefaults";
+import {resolveServiceWorkshop} from "@/lib/resolveServiceWorkshop";
+import {SERVICE_TYPES, type ServiceType} from "@/lib/serviceTypes";
 import Vehicle from "@/models/Vehicle";
-import {SERVICE_TYPES} from "@/lib/serviceTypes";
 import VehicleService from "@/models/VehicleService";
 
 type RouteContext = {
@@ -78,6 +80,9 @@ export async function POST(request: Request, context: RouteContext) {
       nextDueMileage,
       notes,
       cost,
+      performedBy,
+      workshopId,
+      workshopName,
     } = body;
 
     if (
@@ -117,6 +122,12 @@ export async function POST(request: Request, context: RouteContext) {
 
     const serviceMileage = Number(mileage) || 0;
 
+    const workshopFields = await resolveServiceWorkshop(userId, {
+      performedBy,
+      workshopId,
+      workshopName,
+    });
+
     const service = await VehicleService.create({
       userId,
       vehicleId: id,
@@ -124,13 +135,20 @@ export async function POST(request: Request, context: RouteContext) {
       title: title.trim(),
       performedAt: new Date(performedAt),
       mileage: serviceMileage,
-      nextDueAt: nextDueAt ? new Date(nextDueAt) : null,
+      nextDueAt: resolveNextDueAt(
+        type as ServiceType,
+        performedAt,
+        nextDueAt
+      ),
       nextDueMileage:
         nextDueMileage === "" || nextDueMileage == null
           ? null
           : Number(nextDueMileage),
       notes: notes?.trim() || "",
       cost: cost === "" || cost == null ? null : Number(cost),
+      performedBy: workshopFields.performedBy,
+      workshopId: workshopFields.workshopId,
+      workshopName: workshopFields.workshopName,
     });
 
     if (serviceMileage > vehicle.mileage) {
@@ -141,6 +159,10 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json(service, {status: 201});
   } catch (error) {
     console.error("POST vehicle service error:", error);
+
+    if (error instanceof Error && error.message === "Podaj nazwę warsztatu") {
+      return NextResponse.json({message: error.message}, {status: 400});
+    }
 
     return NextResponse.json(
       {message: "Nie udało się dodać serwisu"},

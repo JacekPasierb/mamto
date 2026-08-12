@@ -7,12 +7,19 @@ import {
   STOCK_UNITS,
   type StockCategory,
   type StockUnit,
+  type UsageMode,
 } from "@/lib/stockTypes";
+import {toDateInputValue} from "@/lib/calculateCurrentStock";
 
 export type StockItemFormValues = {
   _id: string;
   name: string;
   category: StockCategory;
+  usageMode: UsageMode;
+  stock?: number;
+  stockDate?: string | null;
+  dailyUsage?: number;
+  reminderThreshold?: number;
   quantity: number;
   unit: StockUnit;
   minQuantity: number;
@@ -27,19 +34,14 @@ type StockFormModalProps = {
   onSaved: () => Promise<void>;
 };
 
-const toDateInput = (value: string | null | undefined) => {
-  if (!value) return "";
+const todayInput = () => toDateInputValue(new Date());
 
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "";
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
+const isDailyItem = (item: StockItemFormValues) =>
+  item.usageMode === "daily" ||
+  (item.stock != null &&
+    item.stockDate != null &&
+    item.dailyUsage != null &&
+    Number(item.dailyUsage) > 0);
 
 const StockFormModal = ({
   isOpen,
@@ -51,8 +53,13 @@ const StockFormModal = ({
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState<StockCategory>("medicine");
+  const [isDailyMedicine, setIsDailyMedicine] = useState(true);
+  const [stock, setStock] = useState("30");
+  const [stockDate, setStockDate] = useState(todayInput());
+  const [dailyUsage, setDailyUsage] = useState("1");
+  const [reminderThreshold, setReminderThreshold] = useState("4");
   const [quantity, setQuantity] = useState("1");
-  const [unit, setUnit] = useState<StockUnit>("szt.");
+  const [unit, setUnit] = useState<StockUnit>("tabletek");
   const [minQuantity, setMinQuantity] = useState("1");
   const [expiresAt, setExpiresAt] = useState("");
   const [notes, setNotes] = useState("");
@@ -63,18 +70,36 @@ const StockFormModal = ({
     if (!isOpen) return;
 
     if (item) {
+      const daily = isDailyItem(item);
+
       setName(item.name);
       setCategory(item.category);
-      setQuantity(String(item.quantity));
-      setUnit(item.unit);
-      setMinQuantity(String(item.minQuantity));
-      setExpiresAt(toDateInput(item.expiresAt));
+      setIsDailyMedicine(daily);
+
+      if (daily) {
+        setStock(String(item.stock ?? 0));
+        setStockDate(toDateInputValue(item.stockDate) || todayInput());
+        setDailyUsage(String(item.dailyUsage ?? 1));
+        setReminderThreshold(String(item.reminderThreshold ?? 1));
+        setUnit(item.unit || "tabletek");
+      } else {
+        setQuantity(String(item.quantity));
+        setUnit(item.unit);
+        setMinQuantity(String(item.minQuantity));
+        setExpiresAt(toDateInputValue(item.expiresAt));
+      }
+
       setNotes(item.notes || "");
     } else {
       setName("");
       setCategory("medicine");
+      setIsDailyMedicine(true);
+      setStock("30");
+      setStockDate(todayInput());
+      setDailyUsage("1");
+      setReminderThreshold("4");
       setQuantity("1");
-      setUnit("szt.");
+      setUnit("tabletek");
       setMinQuantity("1");
       setExpiresAt("");
       setNotes("");
@@ -85,6 +110,8 @@ const StockFormModal = ({
 
   if (!isOpen) return null;
 
+  const showDailyFields = category === "medicine" && isDailyMedicine;
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -92,15 +119,28 @@ const StockFormModal = ({
       setIsSaving(true);
       setError("");
 
-      const payload = {
-        name,
-        category,
-        quantity,
-        unit,
-        minQuantity,
-        expiresAt: expiresAt || null,
-        notes,
-      };
+      const payload = showDailyFields
+        ? {
+            name,
+            category,
+            usageMode: "daily",
+            stock,
+            stockDate,
+            dailyUsage,
+            reminderThreshold,
+            unit: "tabletek",
+            notes,
+          }
+        : {
+            name,
+            category,
+            usageMode: "static",
+            quantity,
+            unit,
+            minQuantity,
+            expiresAt: expiresAt || null,
+            notes,
+          };
 
       const response = await fetch(
         isEditing ? `/api/stock/${item!._id}` : "/api/stock",
@@ -171,7 +211,7 @@ const StockFormModal = ({
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Np. Magnez B6"
+              placeholder="Np. Valsacor"
               required
               className={fieldClass}
             />
@@ -194,66 +234,146 @@ const StockFormModal = ({
             </select>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-1">
-              <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-                Ilość
-              </label>
+          {category === "medicine" ? (
+            <label className="flex items-center gap-3 text-sm text-[var(--mt-muted)]">
               <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                required
-                className={fieldClass}
+                type="checkbox"
+                checked={isDailyMedicine}
+                onChange={(e) => setIsDailyMedicine(e.target.checked)}
+                className="h-4 w-4 accent-[var(--mt-accent)]"
               />
-            </div>
-
-            <div className="col-span-1">
-              <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-                Jednostka
-              </label>
-              <select
-                value={unit}
-                onChange={(e) => setUnit(e.target.value as StockUnit)}
-                className={fieldClass}
-              >
-                {STOCK_UNITS.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-span-1">
-              <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-                Min.
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={minQuantity}
-                onChange={(e) => setMinQuantity(e.target.value)}
-                required
-                className={fieldClass}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-              Data ważności
+              Przyjmowany codziennie (stan wyliczany z daty)
             </label>
-            <input
-              type="date"
-              value={expiresAt}
-              onChange={(e) => setExpiresAt(e.target.value)}
-              className={fieldClass}
-            />
-          </div>
+          ) : null}
+
+          {showDailyFields ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                    Stan początkowy
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={stock}
+                    onChange={(e) => setStock(e.target.value)}
+                    required
+                    className={fieldClass}
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                    Data stanu
+                  </label>
+                  <input
+                    type="date"
+                    value={stockDate}
+                    onChange={(e) => setStockDate(e.target.value)}
+                    required
+                    className={fieldClass}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                    Zużycie dzienne
+                  </label>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={dailyUsage}
+                    onChange={(e) => setDailyUsage(e.target.value)}
+                    required
+                    className={fieldClass}
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                    Próg przypomnienia
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={reminderThreshold}
+                    onChange={(e) => setReminderThreshold(e.target.value)}
+                    required
+                    className={fieldClass}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                    Ilość
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    required
+                    className={fieldClass}
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                    Jednostka
+                  </label>
+                  <select
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value as StockUnit)}
+                    className={fieldClass}
+                  >
+                    {STOCK_UNITS.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-span-1">
+                  <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                    Min.
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={minQuantity}
+                    onChange={(e) => setMinQuantity(e.target.value)}
+                    required
+                    className={fieldClass}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                  Data ważności
+                </label>
+                <input
+                  type="date"
+                  value={expiresAt}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                  className={fieldClass}
+                />
+              </div>
+            </>
+          )}
 
           <div>
             <label className="mb-2 block text-sm text-[var(--mt-muted)]">
@@ -268,21 +388,31 @@ const StockFormModal = ({
             />
           </div>
 
-          {error && (
+          {error ? (
             <p className="text-sm text-[var(--mt-signal)]">{error}</p>
-          )}
+          ) : null}
 
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="w-full bg-[var(--mt-ink)] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--mt-accent)] disabled:opacity-50"
-          >
-            {isSaving
-              ? "Zapisywanie…"
-              : isEditing
-                ? "Zapisz zmiany"
-                : "Dodaj zapas"}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSaving}
+              className="flex-1 border border-[var(--mt-line)] px-4 py-3.5 text-sm font-semibold text-[var(--mt-ink)] transition hover:border-[var(--mt-ink)] disabled:opacity-50"
+            >
+              Anuluj
+            </button>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="flex-1 bg-[var(--mt-ink)] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--mt-accent)] disabled:opacity-50"
+            >
+              {isSaving
+                ? "Zapisywanie…"
+                : isEditing
+                  ? "Zapisz zmiany"
+                  : "Dodaj zapas"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
