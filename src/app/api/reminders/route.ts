@@ -3,7 +3,7 @@ import {NextResponse} from "next/server";
 
 import {connectDB} from "@/lib/mongodb";
 import {todayCalendarDate} from "@/lib/calculateCurrentStock";
-import {SERVICE_TYPE_LABELS, type ServiceType} from "@/lib/serviceTypes";
+import {SERVICE_INTERVALS, SERVICE_TYPE_LABELS, type ServiceType} from "@/lib/serviceTypes";
 import {enrichStockItem} from "@/lib/stockHelpers";
 import {STOCK_CATEGORY_LABELS, type StockCategory} from "@/lib/stockTypes";
 import StockItem from "@/models/StockItem";
@@ -17,22 +17,7 @@ const UPCOMING_KM = 2000;
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_INTERVALS: Partial<
-  Record<
-    ServiceType,
-    {
-      months: number;
-      km: number;
-    }
-  >
-> = {
-  oil: {months: 12, km: 15000},
-  inspection: {months: 12, km: 0},
-  filters: {months: 12, km: 15000},
-  tires: {months: 48, km: 40000},
-  brakes: {months: 24, km: 30000},
-  wipers: {months: 12, km: 0},
-};
+const DEFAULT_INTERVALS = SERVICE_INTERVALS;
 
 export type ReminderItem = {
   id: string;
@@ -42,6 +27,7 @@ export type ReminderItem = {
   reason: string;
   tone: "urgent" | "upcoming";
   sortKey: number;
+  overdue?: boolean;
   refill?: {
     usageMode: "daily" | "static";
     unit: string;
@@ -204,6 +190,9 @@ export async function GET() {
         kmLeft != null ? kmLeft / 50 : Number.POSITIVE_INFINITY
       );
 
+      const overdue =
+        (days != null && days < 0) || (kmLeft != null && kmLeft <= 0);
+
       const item: ReminderItem = {
         id: String(service._id),
         title: service.title || typeLabel,
@@ -212,6 +201,7 @@ export async function GET() {
         reason: formatDueReason({days, kmLeft}),
         tone: isDateUrgent || isKmUrgent ? "urgent" : "upcoming",
         sortKey,
+        overdue,
       };
 
       if (item.tone === "urgent") {
@@ -272,6 +262,12 @@ export async function GET() {
         }
       }
 
+      const expiryDays =
+        expiresAt != null ? daysUntil(expiresAt, now) : null;
+      const overdue =
+        enriched.currentStock <= 0 ||
+        (expiryDays != null && expiryDays < 0);
+
       stock.push({
         id: String(item._id),
         title: item.name,
@@ -282,6 +278,7 @@ export async function GET() {
         sortKey: enriched.isUrgent
           ? enriched.currentStock
           : daysUntil(expiresAt!, now),
+        overdue,
         refill: {
           usageMode: enriched.usageMode,
           unit: item.unit,
@@ -292,10 +289,20 @@ export async function GET() {
 
     stock.sort((a, b) => a.sortKey - b.sortKey);
 
+    const overdueCount =
+      urgent.filter((item) => item.overdue).length +
+      stock.filter((item) => item.overdue).length;
+    const attentionCount = urgent.length + stock.length;
+
     return NextResponse.json({
       urgent,
       upcoming,
       stock,
+      summary: {
+        overdueCount,
+        attentionCount,
+        upcomingCount: upcoming.length,
+      },
     });
   } catch (error) {
     console.error("GET reminders error:", error);

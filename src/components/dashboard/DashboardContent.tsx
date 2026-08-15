@@ -14,14 +14,26 @@ type RemindersResponse = {
   urgent: ReminderListItem[];
   upcoming: ReminderListItem[];
   stock: ReminderListItem[];
+  summary: {
+    overdueCount: number;
+    attentionCount: number;
+    upcomingCount: number;
+  };
+};
+
+const emptyReminders: RemindersResponse = {
+  urgent: [],
+  upcoming: [],
+  stock: [],
+  summary: {
+    overdueCount: 0,
+    attentionCount: 0,
+    upcomingCount: 0,
+  },
 };
 
 const DashboardContent = () => {
-  const [reminders, setReminders] = useState<RemindersResponse>({
-    urgent: [],
-    upcoming: [],
-    stock: [],
-  });
+  const [reminders, setReminders] = useState<RemindersResponse>(emptyReminders);
   const [isLoading, setIsLoading] = useState(true);
   const [refillItem, setRefillItem] = useState<ReminderListItem | null>(null);
 
@@ -38,6 +50,7 @@ const DashboardContent = () => {
       urgent: data.urgent || [],
       upcoming: data.upcoming || [],
       stock: data.stock || [],
+      summary: data.summary || emptyReminders.summary,
     });
   }, []);
 
@@ -77,10 +90,22 @@ const DashboardContent = () => {
     }
   };
 
+  const overdueItems = [
+    ...reminders.urgent.filter((item) => item.overdue),
+    ...reminders.stock.filter((item) => item.overdue),
+  ];
+
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:px-8 lg:px-10 lg:py-12">
-        <DashboardHeader />
+        <DashboardHeader
+          dayStatus={{
+            overdueCount: reminders.summary.overdueCount,
+            attentionCount: reminders.summary.attentionCount,
+            overdueItems,
+            isLoading,
+          }}
+        />
 
         <div className="mt-12">
           <LifeDomains />
@@ -89,12 +114,24 @@ const DashboardContent = () => {
         <QuickAddCard onAddClick={() => {}} />
 
         <div className="mt-rise mt-rise-delay-3 mt-12">
-          <p className="text-[0.62rem] font-medium uppercase tracking-[0.28em] text-[var(--mt-muted)]">
-            Uwaga dnia
-          </p>
-          <h2 className="font-display mt-2 text-2xl tracking-tight">
-            Co wymaga Twojego ruchu
-          </h2>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[0.62rem] font-medium uppercase tracking-[0.28em] text-[var(--mt-muted)]">
+                Uwaga dnia
+              </p>
+              <h2 className="font-display mt-2 text-2xl tracking-tight">
+                Co wymaga Twojego ruchu
+              </h2>
+            </div>
+
+            {!isLoading && reminders.summary.overdueCount > 0 ? (
+              <p className="text-sm font-medium text-[var(--mt-signal)]">
+                {reminders.summary.overdueCount === 1
+                  ? "1 pozycja po terminie"
+                  : `${reminders.summary.overdueCount} pozycji po terminie`}
+              </p>
+            ) : null}
+          </div>
 
           <div className="mt-8 grid gap-10 lg:grid-cols-3">
             <ReminderSection

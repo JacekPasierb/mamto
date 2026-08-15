@@ -3,7 +3,7 @@ import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 
 import {connectDB} from "@/lib/mongodb";
-import {resolveNextDueAt} from "@/lib/serviceDefaults";
+import {resolveNextDueAt, resolveNextDueMileage} from "@/lib/serviceDefaults";
 import {resolveServiceWorkshop} from "@/lib/resolveServiceWorkshop";
 import {SERVICE_TYPES, type ServiceType} from "@/lib/serviceTypes";
 import Vehicle from "@/models/Vehicle";
@@ -140,10 +140,11 @@ export async function POST(request: Request, context: RouteContext) {
         performedAt,
         nextDueAt
       ),
-      nextDueMileage:
-        nextDueMileage === "" || nextDueMileage == null
-          ? null
-          : Number(nextDueMileage),
+      nextDueMileage: resolveNextDueMileage(
+        type as ServiceType,
+        serviceMileage,
+        nextDueMileage
+      ),
       notes: notes?.trim() || "",
       cost: cost === "" || cost == null ? null : Number(cost),
       performedBy: workshopFields.performedBy,

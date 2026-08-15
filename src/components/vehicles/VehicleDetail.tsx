@@ -4,9 +4,12 @@ import Link from "next/link";
 import {useCallback, useEffect, useMemo, useState} from "react";
 
 import {
-  SERVICE_TAB_LABELS,
+  SERVICE_GROUP_LABELS,
+  SERVICE_GROUP_TYPES,
+  SERVICE_GROUPS,
   SERVICE_TYPE_LABELS,
-  SERVICE_TYPES,
+  getServiceGroup,
+  type ServiceGroup,
   type ServiceType,
 } from "@/lib/serviceTypes";
 import {
@@ -27,7 +30,7 @@ type VehicleServiceItem = ServiceFormValues & {
   type: ServiceType;
 };
 
-type ServiceTab = "all" | ServiceType;
+type ServiceTab = "all" | ServiceGroup;
 
 type VehicleDetailProps = {
   vehicle: VehicleDetailData;
@@ -39,6 +42,26 @@ const formatDate = (value: string) =>
     month: "long",
     year: "numeric",
   }).format(new Date(value));
+
+const isServiceOverdue = (service: VehicleServiceItem, currentMileage: number) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (service.nextDueAt) {
+    const due = new Date(service.nextDueAt);
+    due.setHours(0, 0, 0, 0);
+    if (due.getTime() < today.getTime()) return true;
+  }
+
+  if (
+    service.nextDueMileage != null &&
+    service.nextDueMileage <= currentMileage
+  ) {
+    return true;
+  }
+
+  return false;
+};
 
 const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
   const [mileage, setMileage] = useState(vehicle.mileage);
@@ -93,17 +116,13 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
   const counts = useMemo(() => {
     const result: Record<ServiceTab, number> = {
       all: services.length,
-      oil: 0,
-      tires: 0,
-      filters: 0,
-      wipers: 0,
-      inspection: 0,
-      brakes: 0,
-      other: 0,
+      maintenance: 0,
+      repairs: 0,
+      inspections: 0,
     };
 
     for (const service of services) {
-      result[service.type] += 1;
+      result[getServiceGroup(service.type)] += 1;
     }
 
     return result;
@@ -111,14 +130,16 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
 
   const filteredServices = useMemo(() => {
     if (activeTab === "all") return services;
-    return services.filter((service) => service.type === activeTab);
+    return services.filter((service) =>
+      SERVICE_GROUP_TYPES[activeTab].includes(service.type)
+    );
   }, [services, activeTab]);
 
   const tabs: {id: ServiceTab; label: string}[] = [
     {id: "all", label: "Wszystko"},
-    ...SERVICE_TYPES.map((type) => ({
-      id: type as ServiceTab,
-      label: SERVICE_TAB_LABELS[type],
+    ...SERVICE_GROUPS.map((group) => ({
+      id: group as ServiceTab,
+      label: SERVICE_GROUP_LABELS[group],
     })),
   ];
 
@@ -270,7 +291,7 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
               Brak wpisów w kategorii „
               {activeTab === "all"
                 ? "Wszystko"
-                : SERVICE_TAB_LABELS[activeTab]}
+                : SERVICE_GROUP_LABELS[activeTab]}
               ”.
             </p>
           </div>
@@ -278,14 +299,43 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
           <ul className="mt-2 divide-y divide-[var(--mt-line)] border-b border-[var(--mt-line)]">
             {filteredServices.map((service) => {
               const workshopDisplay = getServiceWorkshopDisplay(service);
+              const overdue = isServiceOverdue(service, mileage);
 
               return (
               <li key={service._id} className="py-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[var(--mt-accent)]">
-                      {SERVICE_TYPE_LABELS[service.type]}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[var(--mt-accent)]">
+                        {SERVICE_TYPE_LABELS[service.type]}
+                      </p>
+                      {overdue ? (
+                        <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[var(--mt-signal)]">
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden
+                          >
+                            <path
+                              d="M12 3.5 21 19H3L12 3.5Z"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M12 10v4.5"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                            />
+                            <circle cx="12" cy="17" r="1" fill="currentColor" />
+                          </svg>
+                          Po terminie
+                        </span>
+                      ) : null}
+                    </div>
                     <h3 className="font-display mt-2 text-xl tracking-tight">
                       {service.title}
                     </h3>
@@ -310,7 +360,13 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
                       </p>
                     ) : null}
                     {(service.nextDueAt || service.nextDueMileage != null) && (
-                      <p className="mt-2 text-sm text-[var(--mt-ink)]">
+                      <p
+                        className={`mt-2 text-sm ${
+                          overdue
+                            ? "font-medium text-[var(--mt-signal)]"
+                            : "text-[var(--mt-ink)]"
+                        }`}
+                      >
                         Następny:{" "}
                         {service.nextDueAt
                           ? formatDate(service.nextDueAt)
@@ -321,6 +377,7 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
                         {service.nextDueMileage != null
                           ? `${service.nextDueMileage.toLocaleString("pl-PL")} km`
                           : null}
+                        {overdue ? " · po terminie" : ""}
                       </p>
                     )}
                     {service.notes ? (

@@ -2,11 +2,16 @@
 
 import {useEffect, useState} from "react";
 import {
-  SERVICE_TYPES,
+  SERVICE_FORM_GROUPS,
+  SERVICE_GROUP_TYPES,
+  SERVICE_INTERVALS,
   SERVICE_TYPE_LABELS,
   type ServiceType,
 } from "@/lib/serviceTypes";
-import {addYearsToDateInput} from "@/lib/serviceDefaults";
+import {
+  getDefaultNextDueAtInput,
+  getDefaultNextDueMileage,
+} from "@/lib/serviceDefaults";
 import {
   PERFORMED_BY_OPTIONS,
   PERFORMED_BY_LABELS,
@@ -96,12 +101,20 @@ const ServiceFormModal = ({
       setNotes(service.notes || "");
       setCost(service.cost == null ? "" : String(service.cost));
     } else {
+      const today = new Date().toISOString().slice(0, 10);
+      const startingMileage = currentMileage || 0;
+
       setType("oil");
       setTitle(SERVICE_TYPE_LABELS.oil);
-      setPerformedAt(new Date().toISOString().slice(0, 10));
-      setMileage(String(currentMileage || ""));
-      setNextDueAt("");
-      setNextDueMileage("");
+      setPerformedAt(today);
+      setMileage(String(startingMileage || ""));
+      setNextDueAt(getDefaultNextDueAtInput("oil", today));
+      setNextDueMileage(
+        (() => {
+          const next = getDefaultNextDueMileage("oil", startingMileage);
+          return next == null ? "" : String(next);
+        })()
+      );
       setPerformedBy("workshop");
       setWorkshopId(null);
       setWorkshopName("");
@@ -114,6 +127,22 @@ const ServiceFormModal = ({
 
   if (!isOpen) return null;
 
+  const isRepair = SERVICE_GROUP_TYPES.repairs.includes(type);
+
+  const applyIntervalDefaults = (
+    nextType: ServiceType,
+    nextPerformedAt: string,
+    nextMileageValue: string
+  ) => {
+    setNextDueAt(getDefaultNextDueAtInput(nextType, nextPerformedAt));
+
+    const nextMileage = getDefaultNextDueMileage(
+      nextType,
+      Number(nextMileageValue) || 0
+    );
+    setNextDueMileage(nextMileage == null ? "" : String(nextMileage));
+  };
+
   const handleTypeChange = (value: ServiceType) => {
     setType(value);
 
@@ -121,16 +150,22 @@ const ServiceFormModal = ({
       setTitle(SERVICE_TYPE_LABELS[value]);
     }
 
-    if (value === "inspection") {
-      setNextDueAt(addYearsToDateInput(performedAt, 1));
-    }
+    applyIntervalDefaults(value, performedAt, mileage);
   };
 
   const handlePerformedAtChange = (value: string) => {
     setPerformedAt(value);
 
-    if (type === "inspection") {
-      setNextDueAt(addYearsToDateInput(value, 1));
+    if (!isEditing) {
+      applyIntervalDefaults(type, value, mileage);
+    }
+  };
+
+  const handleMileageChange = (value: string) => {
+    setMileage(value);
+
+    if (!isEditing) {
+      applyIntervalDefaults(type, performedAt, value);
     }
   };
 
@@ -239,10 +274,23 @@ const ServiceFormModal = ({
               onChange={(e) => handleTypeChange(e.target.value as ServiceType)}
               className={fieldClass}
             >
-              {SERVICE_TYPES.map((serviceType) => (
-                <option key={serviceType} value={serviceType}>
-                  {SERVICE_TYPE_LABELS[serviceType]}
-                </option>
+              {SERVICE_FORM_GROUPS.map(({group, types}) => (
+                <optgroup
+                  key={group}
+                  label={
+                    group === "maintenance"
+                      ? "Eksploatacja"
+                      : group === "repairs"
+                        ? "Naprawy"
+                        : "Przeglądy"
+                  }
+                >
+                  {types.map((serviceType) => (
+                    <option key={serviceType} value={serviceType}>
+                      {SERVICE_TYPE_LABELS[serviceType]}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>
@@ -254,7 +302,11 @@ const ServiceFormModal = ({
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Np. Wymiana oleju 5W-30"
+              placeholder={
+                isRepair
+                  ? "Np. Wymiana łącznika stabilizatora"
+                  : "Np. Wymiana oleju 5W-30"
+              }
               required
               className={fieldClass}
             />
@@ -317,12 +369,29 @@ const ServiceFormModal = ({
                 type="number"
                 min="0"
                 value={mileage}
-                onChange={(e) => setMileage(e.target.value)}
+                onChange={(e) => handleMileageChange(e.target.value)}
                 placeholder={String(currentMileage || 0)}
                 className={fieldClass}
               />
             </div>
           </div>
+
+          {SERVICE_INTERVALS[type] ? (
+            <p className="text-xs text-[var(--mt-muted)]">
+              Typowy interwał:{" "}
+              {[
+                SERVICE_INTERVALS[type]?.months
+                  ? `co ${SERVICE_INTERVALS[type]!.months} mies.`
+                  : null,
+                SERVICE_INTERVALS[type]?.km
+                  ? `co ${SERVICE_INTERVALS[type]!.km.toLocaleString("pl-PL")} km`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" / ")}
+              . Następny termin i przebieg ustawiają się automatycznie.
+            </p>
+          ) : null}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -375,7 +444,11 @@ const ServiceFormModal = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="Części, uwagi…"
+              placeholder={
+                isRepair
+                  ? "Opisz naprawę: objawy, części, gwarancja…"
+                  : "Części, uwagi…"
+              }
               className={`${fieldClass} resize-y`}
             />
           </div>
