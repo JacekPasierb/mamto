@@ -1,4 +1,4 @@
-import mongoose, {Schema, models} from "mongoose";
+import mongoose, {Schema} from "mongoose";
 
 import {SERVICE_TYPES} from "@/lib/serviceTypes";
 import {PERFORMED_BY_OPTIONS} from "@/lib/workshopTypes";
@@ -20,7 +20,7 @@ const VehicleServiceSchema = new Schema(
 
     type: {
       type: String,
-      enum: SERVICE_TYPES,
+      enum: [...SERVICE_TYPES],
       required: true,
     },
 
@@ -51,7 +51,7 @@ const VehicleServiceSchema = new Schema(
 
     performedBy: {
       type: String,
-      enum: PERFORMED_BY_OPTIONS,
+      enum: [...PERFORMED_BY_OPTIONS],
       default: "other",
     },
 
@@ -81,8 +81,10 @@ const VehicleServiceSchema = new Schema(
   }
 );
 
-const VehicleService =
-  models.VehicleService ||
-  mongoose.model("VehicleService", VehicleServiceSchema);
+if (mongoose.models.VehicleService) {
+  delete mongoose.models.VehicleService;
+}
+
+const VehicleService = mongoose.model("VehicleService", VehicleServiceSchema);
 
 export default VehicleService;

@@ -5,12 +5,13 @@ import {usePathname} from "next/navigation";
 import {UserButton} from "@clerk/nextjs";
 import {useSettings, type Modules} from "@/context/SettingsContext";
 import MamToLogo from "@/components/brand/MamToLogo";
+import {NavIcon, type NavIconId} from "@/components/icons/NavIcons";
 
 type NavLink = {
   href: string;
   label: string;
-  index: string;
   hint: string;
+  icon: NavIconId;
   moduleKey?: keyof Modules;
 };
 
@@ -18,42 +19,49 @@ const links: NavLink[] = [
   {
     href: "/dashboard",
     label: "Pulpit",
-    index: "01",
     hint: "Całe życie w skrócie",
+    icon: "dashboard",
   },
   {
     href: "/vehicles",
     label: "Pojazdy",
-    index: "02",
     hint: "Olej, opony, przegląd",
+    icon: "vehicles",
     moduleKey: "vehicles",
   },
   {
     href: "/insurance",
     label: "Ubezpieczenia",
-    index: "03",
     hint: "Auto, dom, terminy",
+    icon: "insurance",
     moduleKey: "insurance",
+  },
+  {
+    href: "/documents",
+    label: "Dokumenty osobiste",
+    hint: "Ważność dokumentów",
+    icon: "documents",
+    moduleKey: "documents",
   },
   {
     href: "/beauty",
     label: "Wizyty",
-    index: "04",
     hint: "Fryzjer i pielęgnacja",
+    icon: "visits",
     moduleKey: "beauty",
   },
   {
     href: "/stock",
     label: "Zapasy",
-    index: "05",
     hint: "Leki zanim się skończą",
+    icon: "stock",
     moduleKey: "stock",
   },
   {
     href: "/settings",
     label: "Ustawienia",
-    index: "06",
-    hint: "Moduły i preferencje",
+    hint: "Preferencje konta",
+    icon: "settings",
   },
 ];
 
@@ -82,7 +90,7 @@ const DashboardSidebar = () => {
             }}
           />
         </div>
-        <nav className="flex gap-0 overflow-x-auto px-2 pb-3">
+        <nav className="flex gap-1 overflow-x-auto px-3 pb-3">
           {!isLoading &&
             visibleLinks.map((link) => {
               const isActive =
@@ -93,13 +101,19 @@ const DashboardSidebar = () => {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`relative shrink-0 px-3 py-2 text-sm transition ${
+                  data-active={isActive}
+                  className={`mt-nav-chip relative flex shrink-0 flex-col items-center gap-1.5 px-3 py-2 text-[0.7rem] transition ${
                     isActive
                       ? "font-medium text-[var(--mt-ink)]"
                       : "text-[var(--mt-muted)]"
                   }`}
                 >
-                  {link.label}
+                  <NavIcon id={link.icon} active={isActive} />
+                  <span className="max-w-[4.5rem] truncate text-center">
+                    {link.label === "Dokumenty osobiste"
+                      ? "Dokumenty"
+                      : link.label}
+                  </span>
                   {isActive ? (
                     <span className="absolute inset-x-3 bottom-0 h-[2px] bg-[var(--mt-accent)]" />
                   ) : null}
@@ -109,23 +123,25 @@ const DashboardSidebar = () => {
         </nav>
       </div>
 
-      <aside className="mt-rail sticky top-0 hidden h-screen w-[17.5rem] shrink-0 flex-col border-r border-[var(--mt-line)] px-6 py-8 lg:flex">
-        <Link href="/dashboard" className="group block" aria-label="MamTo">
-          <div className="mt-brand-sheen">
-            <p className="text-[0.62rem] font-medium uppercase tracking-[0.32em] text-[var(--mt-muted)]">
-              Organizer życia
-            </p>
-            <div className="mt-4 transition duration-300 group-hover:translate-x-0.5">
-              <MamToLogo />
+      <aside className="mt-rail sticky top-0 hidden h-dvh max-h-dvh w-[17.5rem] shrink-0 flex-col overflow-hidden border-r border-[var(--mt-line)] lg:flex">
+        <div className="shrink-0 px-6 pb-4 pt-6">
+          <Link href="/dashboard" className="group block" aria-label="MamTo">
+            <div className="mt-brand-sheen">
+              <p className="text-[0.62rem] font-medium uppercase tracking-[0.32em] text-[var(--mt-muted)]">
+                Organizer życia
+              </p>
+              <div className="mt-3 transition duration-300 group-hover:translate-x-0.5">
+                <MamToLogo />
+              </div>
             </div>
-          </div>
-          <p className="mt-4 max-w-[12rem] text-[0.8rem] leading-relaxed text-[var(--mt-muted)]">
-            Pojazdy, polisy, leki i wizyty — zanim wypadną z głowy.
-          </p>
-        </Link>
+            <p className="mt-3 max-w-[12rem] text-[0.75rem] leading-relaxed text-[var(--mt-muted)]">
+              Pojazdy, polisy, dokumenty, leki i wizyty — zanim wypadną z głowy.
+            </p>
+          </Link>
+        </div>
 
-        <nav className="mt-12 flex flex-1 flex-col gap-1">
-          <p className="mb-3 px-3 text-[0.62rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-muted)]">
+        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3">
+          <p className="mb-2 px-3 text-[0.62rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-muted)]">
             Nawigacja
           </p>
 
@@ -144,20 +160,20 @@ const DashboardSidebar = () => {
                   key={link.href}
                   href={link.href}
                   data-active={isActive}
-                  className={`mt-nav-link group flex items-start gap-3 px-3 py-3 transition ${
+                  className={`mt-nav-link group flex items-start gap-3 px-3 py-2.5 transition ${
                     isActive
                       ? "text-[var(--mt-ink)]"
                       : "text-[var(--mt-muted)] hover:text-[var(--mt-ink)]"
                   }`}
                 >
-                  <span className="font-display mt-0.5 w-5 text-[0.68rem] tabular-nums text-[var(--mt-accent)]">
-                    {link.index}
+                  <span className="mt-0.5 flex w-7 shrink-0 justify-center">
+                    <NavIcon id={link.icon} active={isActive} />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-[0.98rem] leading-none">
+                    <span className="block text-[0.95rem] leading-none">
                       {link.label}
                     </span>
-                    <span className="mt-1.5 block text-[0.72rem] leading-snug text-[var(--mt-muted)]">
+                    <span className="mt-1 block text-[0.7rem] leading-snug text-[var(--mt-muted)]">
                       {link.hint}
                     </span>
                   </span>
@@ -166,7 +182,7 @@ const DashboardSidebar = () => {
             })}
         </nav>
 
-        <div className="mt-auto border-t border-[var(--mt-line)] pt-5">
+        <div className="shrink-0 border-t border-[var(--mt-line)] px-6 py-4">
           <div className="flex items-center gap-3">
             <UserButton
               appearance={{

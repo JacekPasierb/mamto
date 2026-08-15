@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type {Vehicle} from "./VehiclesPage";
+import PolishPlate from "./PolishPlate";
 
 type VehicleCardProps = {
   vehicle: Vehicle;
@@ -14,6 +15,8 @@ const VehicleCard = ({vehicle}: VehicleCardProps) => {
         ? "Samochód"
         : "Inny pojazd";
 
+  const isMotorcycle = vehicle.type === "motorcycle";
+
   return (
     <article className="group border-b border-[var(--mt-line)] py-7 md:border-r md:px-6 md:first:pl-0 md:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:[&:nth-child(3n)]:border-r-0">
       <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[var(--mt-muted)]">
@@ -24,13 +27,25 @@ const VehicleCard = ({vehicle}: VehicleCardProps) => {
         {vehicle.name}
       </h2>
 
-      {(vehicle.brand || vehicle.model) && (
+      {(vehicle.brand || vehicle.model || vehicle.year) && (
         <p className="mt-1 text-[var(--mt-muted)]">
-          {vehicle.brand} {vehicle.model}
+          {[vehicle.brand, vehicle.model, vehicle.year]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
       )}
 
-      <div className="mt-8">
+      <div className="plate-stage mt-6 flex items-center justify-center px-5 py-7">
+        <div className="relative z-[1]">
+          <PolishPlate
+            number={vehicle.plateNumber}
+            size="sm"
+            stacked={isMotorcycle && Boolean(vehicle.plateNumber)}
+          />
+        </div>
+      </div>
+
+      <div className="mt-6">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--mt-muted)]">
           Przebieg
         </p>

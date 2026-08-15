@@ -1,25 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
 import MamToLogo from "@/components/brand/MamToLogo";
+import {SiteFooter} from "@/components/legal/LegalPageShell";
 
 const domains = [
   {
-    index: "01",
     title: "Pojazdy",
     line: "Przeglądy, olej, opony — zanim wypadną z kalendarza.",
   },
   {
-    index: "02",
     title: "Ubezpieczenia",
     line: "Auto i dom. Terminy polis zawsze pod ręką.",
   },
   {
-    index: "03",
+    title: "Dokumenty osobiste",
+    line: "Terminy ważności — zanim coś wygaśnie.",
+  },
+  {
     title: "Zapasy",
     line: "Leki i rzeczy, których nie może zabraknąć w środku kuracji.",
   },
   {
-    index: "04",
     title: "Wizyty",
     line: "Fryzjer, kosmetyczka i inne spotkania, o których łatwo zapomnieć.",
   },
@@ -61,8 +62,8 @@ const LandingPage = () => {
               </h1>
 
               <p className="mt-rise mt-rise-delay-2 mt-6 max-w-md text-[1.15rem] leading-relaxed text-[var(--mt-muted)] sm:text-xl">
-                Organizer człowieka. Pojazdy, polisy, leki i wizyty — jedno
-                miejsce, zero zgadywania.
+                Organizer człowieka. Pojazdy, polisy, dokumenty osobiste, leki i
+                wizyty — jedno miejsce, zero zgadywania.
               </p>
 
               <div className="mt-rise mt-rise-delay-3 mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -94,20 +95,17 @@ const LandingPage = () => {
             Życie ma wiele wątków. Trzymamy je razem.
           </h2>
 
-          <div className="mt-rise mt-rise-delay-2 mt-14 grid gap-0 border-y border-[var(--mt-line)] sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-rise mt-rise-delay-2 mt-14 grid gap-0 border-y border-[var(--mt-line)] sm:grid-cols-2 lg:grid-cols-3">
             {domains.map((domain, index) => (
               <article
-                key={domain.index}
+                key={domain.title}
                 className={`group px-0 py-8 sm:px-5 sm:first:pl-0 ${
                   index < domains.length - 1
                     ? "border-b border-[var(--mt-line)] sm:border-b-0 sm:border-r"
                     : ""
                 }`}
               >
-                <p className="font-display text-xs text-[var(--mt-accent)]">
-                  {domain.index}
-                </p>
-                <h3 className="font-display mt-4 text-2xl tracking-tight">
+                <h3 className="font-display text-2xl tracking-tight">
                   {domain.title}
                 </h3>
                 <p className="mt-3 max-w-[16rem] text-sm leading-relaxed text-[var(--mt-muted)]">
@@ -140,14 +138,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <footer className="border-t border-[var(--mt-line)] bg-[#eef3f5]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 sm:px-10 lg:px-14">
-          <MamToLogo className="[&_svg]:h-7 [&_svg]:w-7 [&_span]:text-lg" />
-          <p className="text-xs text-[var(--mt-muted)]">
-            Organizer życia · {new Date().getFullYear()}
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 };

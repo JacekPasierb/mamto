@@ -5,6 +5,7 @@ import {useEffect, useState} from "react";
 export type Modules = {
   vehicles: boolean;
   insurance: boolean;
+  documents: boolean;
   beauty: boolean;
   stock: boolean;
 };

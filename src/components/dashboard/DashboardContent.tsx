@@ -8,6 +8,7 @@ import AppShell from "./AppShell";
 import DashboardHeader from "./DashboardHeader";
 import LifeDomains from "./LifeDomains";
 import QuickAddCard from "./QuickAddCard";
+import QuickAddModal from "./QuickAddModal";
 import ReminderSection, {type ReminderListItem} from "./ReminderSection";
 
 type RemindersResponse = {
@@ -36,6 +37,7 @@ const DashboardContent = () => {
   const [reminders, setReminders] = useState<RemindersResponse>(emptyReminders);
   const [isLoading, setIsLoading] = useState(true);
   const [refillItem, setRefillItem] = useState<ReminderListItem | null>(null);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   const loadReminders = useCallback(async () => {
     const response = await fetch("/api/reminders", {cache: "no-store"});
@@ -90,6 +92,14 @@ const DashboardContent = () => {
     }
   };
 
+  const handleQuickSaved = async () => {
+    try {
+      await loadReminders();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const overdueItems = [
     ...reminders.urgent.filter((item) => item.overdue),
     ...reminders.stock.filter((item) => item.overdue),
@@ -111,7 +121,7 @@ const DashboardContent = () => {
           <LifeDomains />
         </div>
 
-        <QuickAddCard onAddClick={() => {}} />
+        <QuickAddCard onAddClick={() => setIsQuickAddOpen(true)} />
 
         <div className="mt-rise mt-rise-delay-3 mt-12">
           <div className="flex flex-wrap items-end justify-between gap-4">
@@ -164,6 +174,12 @@ const DashboardContent = () => {
           </div>
         </div>
       </div>
+
+      <QuickAddModal
+        isOpen={isQuickAddOpen}
+        onClose={() => setIsQuickAddOpen(false)}
+        onSaved={handleQuickSaved}
+      />
 
       {refillItem?.refill ? (
         <RefillStockModal

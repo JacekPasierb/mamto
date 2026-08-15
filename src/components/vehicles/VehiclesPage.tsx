@@ -3,7 +3,7 @@
 import {useEffect, useState} from "react";
 
 import AppShell from "@/components/dashboard/AppShell";
-import AddVehicleModal from "./AddVehicleModal";
+import VehicleFormModal from "./VehicleFormModal";
 import VehicleCard from "./VehicleCard";
 
 export type Vehicle = {
@@ -11,6 +11,9 @@ export type Vehicle = {
   name: string;
   brand: string;
   model: string;
+  year?: number | null;
+  vin?: string;
+  plateNumber?: string;
   mileage: number;
   type: "car" | "motorcycle" | "other";
 };
@@ -104,10 +107,10 @@ const VehiclesPage = () => {
         )}
       </div>
 
-      <AddVehicleModal
+      <VehicleFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreated={fetchVehicles}
+        onSaved={fetchVehicles}
       />
     </AppShell>
   );

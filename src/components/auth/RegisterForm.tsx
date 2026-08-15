@@ -19,12 +19,18 @@ const RegisterForm = () => {
 
   const [code, setCode] = useState("");
   const [showVerification, setShowVerification] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+
+    if (!acceptedTerms) {
+      setError("Zaakceptuj regulamin i politykę prywatności.");
+      return;
+    }
 
     try {
       const {error: signUpError} = await signUp.password({
@@ -96,6 +102,11 @@ const RegisterForm = () => {
 
   const handleGoogleLogin = async () => {
     setError("");
+
+    if (!acceptedTerms) {
+      setError("Zaakceptuj regulamin i politykę prywatności.");
+      return;
+    }
 
     try {
       const {error: ssoError} = await signUp.sso({
@@ -242,13 +253,42 @@ const RegisterForm = () => {
           />
         </div>
 
+        <label className="flex items-start gap-3 text-sm leading-relaxed text-[var(--mt-muted)]">
+          <input
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={(e) => setAcceptedTerms(e.target.checked)}
+            className="mt-1 h-4 w-4 accent-[var(--mt-accent)]"
+            required
+          />
+          <span>
+            Akceptuję{" "}
+            <Link
+              href="/regulamin"
+              className="font-medium text-[var(--mt-ink)] underline-offset-4 hover:text-[var(--mt-accent)] hover:underline"
+              target="_blank"
+            >
+              Regulamin
+            </Link>{" "}
+            oraz{" "}
+            <Link
+              href="/polityka-prywatnosci"
+              className="font-medium text-[var(--mt-ink)] underline-offset-4 hover:text-[var(--mt-accent)] hover:underline"
+              target="_blank"
+            >
+              Politykę prywatności
+            </Link>
+            .
+          </span>
+        </label>
+
         {error ? (
           <p className="text-sm text-[var(--mt-signal)]">{error}</p>
         ) : null}
 
         <button
           type="submit"
-          disabled={fetchStatus === "fetching"}
+          disabled={fetchStatus === "fetching" || !acceptedTerms}
           className="w-full bg-[var(--mt-ink)] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--mt-accent)] disabled:opacity-50"
         >
           {fetchStatus === "fetching" ? "Tworzę konto…" : "Załóż konto"}
@@ -266,7 +306,7 @@ const RegisterForm = () => {
       <button
         type="button"
         onClick={handleGoogleLogin}
-        disabled={fetchStatus === "fetching"}
+        disabled={fetchStatus === "fetching" || !acceptedTerms}
         className="w-full border border-[var(--mt-line)] bg-white/50 px-4 py-3.5 text-sm font-medium transition hover:border-[var(--mt-accent)] hover:text-[var(--mt-accent)] disabled:opacity-50"
       >
         Kontynuuj z Google

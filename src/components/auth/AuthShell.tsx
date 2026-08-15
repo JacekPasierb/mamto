@@ -30,8 +30,22 @@ const AuthShell = ({eyebrow, title, description, children}: AuthShellProps) => {
           </div>
 
           <p className="mt-12 hidden text-sm text-[var(--mt-muted)] lg:block">
-            Pojazdy · polisy · leki · wizyty
+            Pojazdy · polisy · dokumenty · leki · wizyty
           </p>
+          <nav className="mt-6 hidden flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--mt-muted)] lg:flex">
+            <Link href="/regulamin" className="hover:text-[var(--mt-accent)]">
+              Regulamin
+            </Link>
+            <Link
+              href="/polityka-prywatnosci"
+              className="hover:text-[var(--mt-accent)]"
+            >
+              Prywatność
+            </Link>
+            <Link href="/cookies" className="hover:text-[var(--mt-accent)]">
+              Cookies
+            </Link>
+          </nav>
         </aside>
 
         <section className="flex flex-1 items-center px-6 py-10 sm:px-10 lg:px-14 lg:py-12">

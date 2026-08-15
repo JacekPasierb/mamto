@@ -49,7 +49,11 @@ export default async function VehiclePage({params}: VehiclePageProps) {
           name: vehicle.name,
           brand: vehicle.brand || "",
           model: vehicle.model || "",
+          year: vehicle.year ?? null,
+          vin: vehicle.vin || "",
+          plateNumber: vehicle.plateNumber || "",
           mileage: vehicle.mileage || 0,
+          type: vehicle.type || "car",
         }}
       />
     </AppShell>

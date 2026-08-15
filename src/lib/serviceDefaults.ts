@@ -1,6 +1,7 @@
 import {
-  SERVICE_INTERVALS,
+  getServiceInterval,
   type ServiceType,
+  type VehicleKind,
 } from "@/lib/serviceTypes";
 
 export function addMonthsToDateInput(dateStr: string, months: number): string {
@@ -38,9 +39,10 @@ function toDateInputString(value: string | Date): string {
 
 export function getDefaultNextDueAtInput(
   type: ServiceType,
-  performedAt: string
+  performedAt: string,
+  vehicleKind: VehicleKind = "car"
 ): string {
-  const interval = SERVICE_INTERVALS[type];
+  const interval = getServiceInterval(type, vehicleKind);
 
   if (!interval?.months) {
     return "";
@@ -51,9 +53,10 @@ export function getDefaultNextDueAtInput(
 
 export function getDefaultNextDueMileage(
   type: ServiceType,
-  mileage: number
+  mileage: number,
+  vehicleKind: VehicleKind = "car"
 ): number | null {
-  const interval = SERVICE_INTERVALS[type];
+  const interval = getServiceInterval(type, vehicleKind);
 
   if (!interval?.km || mileage <= 0) {
     return null;
@@ -65,14 +68,15 @@ export function getDefaultNextDueMileage(
 export function resolveNextDueAt(
   type: ServiceType,
   performedAt: string | Date,
-  nextDueAt?: string | null
+  nextDueAt?: string | null,
+  vehicleKind: VehicleKind = "car"
 ): Date | null {
   if (nextDueAt) {
     return new Date(nextDueAt);
   }
 
   const dateStr = toDateInputString(performedAt);
-  const nextDateStr = getDefaultNextDueAtInput(type, dateStr);
+  const nextDateStr = getDefaultNextDueAtInput(type, dateStr, vehicleKind);
 
   if (!nextDateStr) {
     return null;
@@ -86,11 +90,12 @@ export function resolveNextDueAt(
 export function resolveNextDueMileage(
   type: ServiceType,
   mileage: number,
-  nextDueMileage?: string | number | null
+  nextDueMileage?: string | number | null,
+  vehicleKind: VehicleKind = "car"
 ): number | null {
   if (nextDueMileage !== "" && nextDueMileage != null) {
     return Number(nextDueMileage);
   }
 
-  return getDefaultNextDueMileage(type, mileage);
+  return getDefaultNextDueMileage(type, mileage, vehicleKind);
 }

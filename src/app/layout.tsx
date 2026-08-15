@@ -1,6 +1,7 @@
 import {ClerkProvider} from "@clerk/nextjs";
 import type {Metadata} from "next";
 import {Bricolage_Grotesque, Figtree} from "next/font/google";
+import CookieBanner from "@/components/legal/CookieBanner";
 import {SettingsProvider} from "@/context/SettingsContext";
 import "./globals.css";
 
@@ -16,7 +17,8 @@ const body = Figtree({
 
 export const metadata: Metadata = {
   title: "MamTo",
-  description: "Twój osobisty organizer — pojazdy, polisy, zapasy i wizyty.",
+  description:
+    "Twój osobisty organizer — pojazdy, polisy, dokumenty, zapasy i wizyty.",
   icons: {
     icon: "/mamto-mark.svg",
     apple: "/mamto-logo.png",
@@ -32,7 +34,10 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="pl" className={`${display.variable} ${body.variable}`}>
         <body className="antialiased">
-          <SettingsProvider>{children}</SettingsProvider>
+          <SettingsProvider>
+            {children}
+            <CookieBanner />
+          </SettingsProvider>
         </body>
       </html>
     </ClerkProvider>

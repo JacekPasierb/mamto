@@ -1,5 +1,14 @@
+import {auth} from "@clerk/nextjs/server";
+import {redirect} from "next/navigation";
+
 import RegisterForm from "@/components/auth/RegisterForm";
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  const {userId} = await auth();
+
+  if (userId) {
+    redirect("/dashboard");
+  }
+
   return <RegisterForm />;
 }

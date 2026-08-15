@@ -1,4 +1,4 @@
-import mongoose, {Schema, models} from "mongoose";
+import mongoose, {Schema} from "mongoose";
 
 const UserSettingsSchema = new Schema(
   {
@@ -17,6 +17,10 @@ const UserSettingsSchema = new Schema(
         type: Boolean,
         default: true,
       },
+      documents: {
+        type: Boolean,
+        default: true,
+      },
       beauty: {
         type: Boolean,
         default: false,
@@ -32,7 +36,10 @@ const UserSettingsSchema = new Schema(
   }
 );
 
-const UserSettings =
-  models.UserSettings || mongoose.model("UserSettings", UserSettingsSchema);
+if (mongoose.models.UserSettings) {
+  delete mongoose.models.UserSettings;
+}
+
+const UserSettings = mongoose.model("UserSettings", UserSettingsSchema);
 
 export default UserSettings;

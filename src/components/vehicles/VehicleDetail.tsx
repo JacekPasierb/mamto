@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {useCallback, useEffect, useMemo, useState} from "react";
 
 import {
@@ -15,15 +16,21 @@ import {
 import {
   getServiceWorkshopDisplay,
 } from "@/lib/workshopTypes";
+import PolishPlate from "./PolishPlate";
 import ServiceFormModal, {type ServiceFormValues} from "./ServiceFormModal";
 import ServiceMileageTimeline from "./ServiceMileageTimeline";
+import VehicleFormModal, {type VehicleFormValues} from "./VehicleFormModal";
 
 export type VehicleDetailData = {
   _id: string;
   name: string;
   brand: string;
   model: string;
+  year: number | null;
+  vin: string;
+  plateNumber: string;
   mileage: number;
+  type: "car" | "motorcycle" | "other";
 };
 
 type VehicleServiceItem = ServiceFormValues & {
@@ -35,6 +42,8 @@ type ServiceTab = "all" | ServiceGroup;
 type VehicleDetailProps = {
   vehicle: VehicleDetailData;
 };
+
+const SERVICES_PER_PAGE = 8;
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("pl-PL", {
@@ -63,15 +72,20 @@ const isServiceOverdue = (service: VehicleServiceItem, currentMileage: number) =
   return false;
 };
 
-const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
-  const [mileage, setMileage] = useState(vehicle.mileage);
+const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
+  const router = useRouter();
+  const [vehicle, setVehicle] = useState(initialVehicle);
+  const [mileage, setMileage] = useState(initialVehicle.mileage);
   const [services, setServices] = useState<VehicleServiceItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ServiceTab>("all");
+  const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
   const [editingService, setEditingService] =
     useState<VehicleServiceItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeletingVehicle, setIsDeletingVehicle] = useState(false);
 
   const loadServices = useCallback(async () => {
     const response = await fetch(`/api/vehicles/${vehicle._id}/services`);
@@ -88,7 +102,7 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
         Math.max(max, item.mileage || 0),
       vehicle.mileage
     );
-    setMileage(maxMileage);
+    setMileage(Math.max(maxMileage, vehicle.mileage));
   }, [vehicle._id, vehicle.mileage]);
 
   useEffect(() => {
@@ -134,6 +148,23 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
       SERVICE_GROUP_TYPES[activeTab].includes(service.type)
     );
   }, [services, activeTab]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredServices.length / SERVICES_PER_PAGE)
+  );
+
+  const currentPage = Math.min(page, totalPages);
+
+  const paginatedServices = useMemo(() => {
+    const start = (currentPage - 1) * SERVICES_PER_PAGE;
+    return filteredServices.slice(start, start + SERVICES_PER_PAGE);
+  }, [filteredServices, currentPage]);
+
+  const handleTabChange = (tab: ServiceTab) => {
+    setActiveTab(tab);
+    setPage(1);
+  };
 
   const tabs: {id: ServiceTab; label: string}[] = [
     {id: "all", label: "Wszystko"},
@@ -188,6 +219,48 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
     }
   };
 
+  const handleVehicleSaved = async (saved?: VehicleFormValues) => {
+    if (!saved) return;
+
+    setVehicle(saved);
+    setMileage(saved.mileage);
+    await loadServices();
+  };
+
+  const handleDeleteVehicle = async () => {
+    const confirmed = window.confirm(
+      `Usunąć pojazd „${vehicle.name}” wraz z historią serwisową? Tej operacji nie da się cofnąć.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setIsDeletingVehicle(true);
+
+      const response = await fetch(`/api/vehicles/${vehicle._id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Nie udało się usunąć pojazdu");
+      }
+
+      router.push("/vehicles");
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      window.alert("Nie udało się usunąć pojazdu.");
+      setIsDeletingVehicle(false);
+    }
+  };
+
+  const typeLabel =
+    vehicle.type === "motorcycle"
+      ? "Motocykl"
+      : vehicle.type === "car"
+        ? "Samochód"
+        : "Inny pojazd";
+
   return (
     <>
       <div className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
@@ -198,32 +271,99 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
           ← Pojazdy
         </Link>
 
-        <p className="mt-8 text-[0.65rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-accent)]">
-          Serwis pojazdu
-        </p>
+        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-[0.65rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-accent)]">
+              Serwis pojazdu · {typeLabel}
+            </p>
 
-        <h1 className="font-display mt-3 text-4xl tracking-tight">
-          {vehicle.name}
-        </h1>
+            <h1 className="font-display mt-3 text-4xl tracking-tight">
+              {vehicle.name}
+            </h1>
 
-        <p className="mt-2 text-[var(--mt-muted)]">
-          {vehicle.brand} {vehicle.model}
-        </p>
+            <p className="mt-2 text-[var(--mt-muted)]">
+              {[vehicle.brand, vehicle.model, vehicle.year]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
 
-        <div className="mt-10 border-y border-[var(--mt-line)] py-8">
-          <p className="text-xs uppercase tracking-[0.18em] text-[var(--mt-muted)]">
-            Aktualny przebieg
-          </p>
-          <p className="font-display mt-2 text-3xl tabular-nums">
-            {mileage.toLocaleString("pl-PL")} km
-          </p>
+          <div className="flex shrink-0 flex-wrap gap-4">
+            <button
+              type="button"
+              onClick={() => setIsVehicleModalOpen(true)}
+              className="text-sm font-medium text-[var(--mt-accent)] underline-offset-4 transition hover:underline"
+            >
+              Edytuj pojazd
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteVehicle}
+              disabled={isDeletingVehicle}
+              className="text-sm font-medium text-[var(--mt-signal)] underline-offset-4 transition hover:underline disabled:opacity-50"
+            >
+              {isDeletingVehicle ? "Usuwanie…" : "Usuń pojazd"}
+            </button>
+          </div>
+        </div>
+
+        <div className="plate-stage mt-10 px-6 py-10 sm:px-10">
+          <div className="relative z-[1] flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex w-full flex-col items-center sm:items-start">
+              <p className="mb-4 text-[0.65rem] uppercase tracking-[0.24em] text-[var(--mt-muted)]">
+                Tablica rejestracyjna
+              </p>
+              <PolishPlate
+                number={vehicle.plateNumber}
+                size="lg"
+                stacked={
+                  vehicle.type === "motorcycle" && Boolean(vehicle.plateNumber)
+                }
+              />
+            </div>
+
+            <div className="grid w-full grid-cols-3 gap-4 text-center sm:max-w-md sm:text-left">
+              <div>
+                <p className="text-[0.65rem] uppercase tracking-[0.18em] text-[var(--mt-muted)]">
+                  Przebieg
+                </p>
+                <p className="font-display mt-2 text-2xl tabular-nums text-[var(--mt-ink)]">
+                  {mileage.toLocaleString("pl-PL")}
+                  <span className="ml-1 text-sm font-sans text-[var(--mt-muted)]">
+                    km
+                  </span>
+                </p>
+              </div>
+              <div>
+                <p className="text-[0.65rem] uppercase tracking-[0.18em] text-[var(--mt-muted)]">
+                  Rocznik
+                </p>
+                <p className="font-display mt-2 text-2xl tabular-nums text-[var(--mt-ink)]">
+                  {vehicle.year ?? "—"}
+                </p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[0.65rem] uppercase tracking-[0.18em] text-[var(--mt-muted)]">
+                  VIN
+                </p>
+                <p
+                  className="mt-2 truncate font-mono text-xs tracking-wide text-[var(--mt-ink)]/80"
+                  title={vehicle.vin || undefined}
+                >
+                  {vehicle.vin || "—"}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="mt-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="font-display text-2xl tracking-tight">Serwis</h2>
             <p className="mt-2 text-[var(--mt-muted)]">
-              Olej, wycieraczki, filtry, opony i inne czynności.
+              {vehicle.type === "motorcycle"
+                ? "Olej, łańcuch, zawory, opony i inne czynności."
+                : "Olej, wycieraczki, filtry, opony i inne czynności."}
             </p>
           </div>
 
@@ -250,7 +390,7 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
                 type="button"
                 role="tab"
                 aria-selected={isActive}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`relative shrink-0 px-3 py-3 text-sm transition sm:px-4 ${
                   isActive
                     ? "font-medium text-[var(--mt-ink)]"
@@ -297,7 +437,7 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
           </div>
         ) : (
           <ul className="mt-2 divide-y divide-[var(--mt-line)] border-b border-[var(--mt-line)]">
-            {filteredServices.map((service) => {
+            {paginatedServices.map((service) => {
               const workshopDisplay = getServiceWorkshopDisplay(service);
               const overdue = isServiceOverdue(service, mileage);
 
@@ -411,9 +551,42 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
           </ul>
         )}
 
+        {!isLoading && filteredServices.length > SERVICES_PER_PAGE ? (
+          <div className="mt-6 flex flex-col gap-3 border-t border-[var(--mt-line)] pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-[var(--mt-muted)]">
+              Strona {currentPage} z {totalPages}
+              <span className="text-[var(--mt-muted)]/80">
+                {" "}
+                · {filteredServices.length} wpisów
+              </span>
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+                disabled={currentPage <= 1}
+                className="border border-[var(--mt-line)] px-4 py-2 text-sm font-medium text-[var(--mt-ink)] transition hover:border-[var(--mt-ink)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Poprzednia
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setPage((value) => Math.min(totalPages, value + 1))
+                }
+                disabled={currentPage >= totalPages}
+                className="border border-[var(--mt-line)] px-4 py-2 text-sm font-medium text-[var(--mt-ink)] transition hover:border-[var(--mt-ink)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Następna
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         {!isLoading && services.length > 0 ? (
           <ServiceMileageTimeline
-            services={filteredServices}
+            services={services}
             currentMileage={mileage}
           />
         ) : null}
@@ -421,11 +594,19 @@ const VehicleDetail = ({vehicle}: VehicleDetailProps) => {
 
       <ServiceFormModal
         vehicleId={vehicle._id}
+        vehicleKind={vehicle.type}
         currentMileage={mileage}
         isOpen={isModalOpen}
         service={editingService}
         onClose={closeModal}
         onSaved={loadServices}
+      />
+
+      <VehicleFormModal
+        isOpen={isVehicleModalOpen}
+        vehicle={vehicle}
+        onClose={() => setIsVehicleModalOpen(false)}
+        onSaved={handleVehicleSaved}
       />
     </>
   );

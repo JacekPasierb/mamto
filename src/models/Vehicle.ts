@@ -1,4 +1,4 @@
-import mongoose, {Schema, models} from "mongoose";
+import mongoose, {Schema} from "mongoose";
 
 const VehicleSchema = new Schema(
   {
@@ -23,6 +23,25 @@ const VehicleSchema = new Schema(
       default: "",
     },
 
+    year: {
+      type: Number,
+      default: null,
+    },
+
+    vin: {
+      type: String,
+      default: "",
+      trim: true,
+      uppercase: true,
+    },
+
+    plateNumber: {
+      type: String,
+      default: "",
+      trim: true,
+      uppercase: true,
+    },
+
     mileage: {
       type: Number,
       default: 0,
@@ -39,6 +58,10 @@ const VehicleSchema = new Schema(
   }
 );
 
-const Vehicle = models.Vehicle || mongoose.model("Vehicle", VehicleSchema);
+if (mongoose.models.Vehicle) {
+  delete mongoose.models.Vehicle;
+}
+
+const Vehicle = mongoose.model("Vehicle", VehicleSchema);
 
 export default Vehicle;

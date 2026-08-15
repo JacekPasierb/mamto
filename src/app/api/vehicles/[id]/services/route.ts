@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import {connectDB} from "@/lib/mongodb";
 import {resolveNextDueAt, resolveNextDueMileage} from "@/lib/serviceDefaults";
 import {resolveServiceWorkshop} from "@/lib/resolveServiceWorkshop";
-import {SERVICE_TYPES, type ServiceType} from "@/lib/serviceTypes";
+import {SERVICE_TYPES, type ServiceType, type VehicleKind} from "@/lib/serviceTypes";
 import Vehicle from "@/models/Vehicle";
 import VehicleService from "@/models/VehicleService";
 
@@ -121,6 +121,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const serviceMileage = Number(mileage) || 0;
+    const vehicleKind = (vehicle.type || "car") as VehicleKind;
 
     const workshopFields = await resolveServiceWorkshop(userId, {
       performedBy,
@@ -138,12 +139,14 @@ export async function POST(request: Request, context: RouteContext) {
       nextDueAt: resolveNextDueAt(
         type as ServiceType,
         performedAt,
-        nextDueAt
+        nextDueAt,
+        vehicleKind
       ),
       nextDueMileage: resolveNextDueMileage(
         type as ServiceType,
         serviceMileage,
-        nextDueMileage
+        nextDueMileage,
+        vehicleKind
       ),
       notes: notes?.trim() || "",
       cost: cost === "" || cost == null ? null : Number(cost),

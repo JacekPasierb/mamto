@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    const {name, brand, model, mileage, type} = body;
+    const {name, brand, model, mileage, type, year, vin, plateNumber} = body;
 
     if (!name) {
       return NextResponse.json(
@@ -52,11 +52,17 @@ export async function POST(request: Request) {
 
     const vehicle = await Vehicle.create({
       userId,
-      name,
-      brand,
-      model,
+      name: name.trim(),
+      brand: brand?.trim() || "",
+      model: model?.trim() || "",
+      year:
+        year === "" || year == null
+          ? null
+          : Number(year) || null,
+      vin: vin?.trim().toUpperCase() || "",
+      plateNumber: plateNumber?.trim().toUpperCase() || "",
       mileage: Number(mileage) || 0,
-      type,
+      type: type || "car",
     });
 
     return NextResponse.json(vehicle, {

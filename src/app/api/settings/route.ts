@@ -4,6 +4,24 @@ import {NextResponse} from "next/server";
 import {connectDB} from "@/lib/mongodb";
 import UserSettings from "@/models/UserSettings";
 
+const DEFAULT_MODULES = {
+  vehicles: true,
+  insurance: true,
+  documents: true,
+  beauty: false,
+  stock: true,
+};
+
+function normalizeModules(modules?: Partial<typeof DEFAULT_MODULES> | null) {
+  return {
+    vehicles: modules?.vehicles ?? DEFAULT_MODULES.vehicles,
+    insurance: modules?.insurance ?? DEFAULT_MODULES.insurance,
+    documents: modules?.documents ?? DEFAULT_MODULES.documents,
+    beauty: modules?.beauty ?? DEFAULT_MODULES.beauty,
+    stock: modules?.stock ?? DEFAULT_MODULES.stock,
+  };
+}
+
 export async function GET() {
   try {
     const {userId} = await auth();
@@ -19,16 +37,22 @@ export async function GET() {
     if (!settings) {
       settings = await UserSettings.create({
         userId,
-        modules: {
-          vehicles: true,
-          insurance: true,
-          beauty: false,
-          stock: true,
-        },
+        modules: DEFAULT_MODULES,
       });
+    } else if (settings.modules?.documents === undefined) {
+      settings = await UserSettings.findOneAndUpdate(
+        {userId},
+        {$set: {"modules.documents": true}},
+        {new: true}
+      );
     }
 
-    return NextResponse.json(settings);
+    const plain = settings!.toObject();
+
+    return NextResponse.json({
+      ...plain,
+      modules: normalizeModules(plain.modules),
+    });
   } catch (error) {
     console.error("GET settings error:", error);
 
@@ -51,11 +75,13 @@ export async function PUT(request: Request) {
 
     await connectDB();
 
+    const modules = normalizeModules(body.modules);
+
     const settings = await UserSettings.findOneAndUpdate(
       {userId},
       {
         $set: {
-          modules: body.modules,
+          modules,
         },
       },
       {
@@ -64,7 +90,10 @@ export async function PUT(request: Request) {
       }
     );
 
-    return NextResponse.json(settings);
+    return NextResponse.json({
+      ...settings.toObject(),
+      modules,
+    });
   } catch (error) {
     console.error("PUT settings error:", error);
 

@@ -3,9 +3,27 @@ import {NextResponse} from "next/server";
 
 import {connectDB} from "@/lib/mongodb";
 import {todayCalendarDate} from "@/lib/calculateCurrentStock";
-import {SERVICE_INTERVALS, SERVICE_TYPE_LABELS, type ServiceType} from "@/lib/serviceTypes";
+import {enrichDocument} from "@/lib/documentHelpers";
+import {
+  DOCUMENT_TYPE_LABELS,
+  DOCUMENT_UPCOMING_DAYS,
+  DOCUMENT_URGENT_DAYS,
+  normalizeDocumentType,
+  type DocumentType,
+} from "@/lib/documentTypes";
+import {enrichInsurance} from "@/lib/insuranceHelpers";
+import {
+  INSURANCE_TYPE_LABELS,
+  INSURANCE_UPCOMING_DAYS,
+  INSURANCE_URGENT_DAYS,
+  normalizeInsuranceType,
+  type InsuranceType,
+} from "@/lib/insuranceTypes";
+import {SERVICE_TYPE_LABELS, getServiceInterval, type ServiceType, type VehicleKind} from "@/lib/serviceTypes";
 import {enrichStockItem} from "@/lib/stockHelpers";
 import {STOCK_CATEGORY_LABELS, type StockCategory} from "@/lib/stockTypes";
+import InsurancePolicy from "@/models/InsurancePolicy";
+import PersonalDocument from "@/models/PersonalDocument";
 import StockItem from "@/models/StockItem";
 import Vehicle from "@/models/Vehicle";
 import VehicleService from "@/models/VehicleService";
@@ -16,8 +34,6 @@ const URGENT_KM = 500;
 const UPCOMING_KM = 2000;
 
 export const dynamic = "force-dynamic";
-
-const DEFAULT_INTERVALS = SERVICE_INTERVALS;
 
 export type ReminderItem = {
   id: string;
@@ -50,6 +66,7 @@ type LeanVehicle = {
   _id: unknown;
   name: string;
   mileage: number;
+  type?: VehicleKind;
 };
 
 type LeanStockItem = {
@@ -78,8 +95,8 @@ function addMonths(date: Date, months: number) {
   return result;
 }
 
-function resolveDue(service: LeanService) {
-  const interval = DEFAULT_INTERVALS[service.type];
+function resolveDue(service: LeanService, vehicleKind: VehicleKind = "car") {
+  const interval = getServiceInterval(service.type, vehicleKind);
 
   let dueAt = service.nextDueAt ? new Date(service.nextDueAt) : null;
   let dueMileage =
@@ -163,7 +180,10 @@ export async function GET() {
       const vehicle = vehicleMap.get(String(service.vehicleId));
       if (!vehicle) continue;
 
-      const {dueAt, dueMileage} = resolveDue(service);
+      const {dueAt, dueMileage} = resolveDue(
+        service,
+        (vehicle.type || "car") as VehicleKind
+      );
 
       if (!dueAt && dueMileage == null) continue;
 
@@ -288,6 +308,97 @@ export async function GET() {
     }
 
     stock.sort((a, b) => a.sortKey - b.sortKey);
+
+    const insurancePolicies = (await InsurancePolicy.find({userId}).lean()) as {
+      _id: unknown;
+      name: string;
+      type: InsuranceType;
+      insurer?: string;
+      endsAt: Date;
+    }[];
+
+    for (const policy of insurancePolicies) {
+      const enriched = enrichInsurance(policy, now);
+      const days = enriched.daysUntilEnd;
+
+      if (days > INSURANCE_UPCOMING_DAYS) continue;
+
+      const reason =
+        days < 0
+          ? `po terminie o ${Math.abs(days)} dni`
+          : days === 0
+            ? "kończy się dziś"
+            : `kończy się za ${days} dni`;
+
+      const item: ReminderItem = {
+        id: `insurance-${String(policy._id)}`,
+        title: policy.name,
+        subtitle: [
+          INSURANCE_TYPE_LABELS[normalizeInsuranceType(policy.type)],
+          policy.insurer || null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        href: "/insurance",
+        reason,
+        tone: days <= INSURANCE_URGENT_DAYS ? "urgent" : "upcoming",
+        sortKey: days,
+        overdue: days < 0,
+      };
+
+      if (item.tone === "urgent") {
+        urgent.push(item);
+      } else {
+        upcoming.push(item);
+      }
+    }
+
+    const personalDocuments = (await PersonalDocument.find({userId}).lean()) as {
+      _id: unknown;
+      name: string;
+      type: DocumentType;
+      issuer?: string;
+      expiresAt: Date;
+    }[];
+
+    for (const document of personalDocuments) {
+      const enriched = enrichDocument(document, now);
+      const days = enriched.daysUntilExpiry;
+
+      if (days > DOCUMENT_UPCOMING_DAYS) continue;
+
+      const reason =
+        days < 0
+          ? `po terminie o ${Math.abs(days)} dni`
+          : days === 0
+            ? "wygasa dziś"
+            : `wygasa za ${days} dni`;
+
+      const item: ReminderItem = {
+        id: `document-${String(document._id)}`,
+        title: document.name,
+        subtitle: [
+          DOCUMENT_TYPE_LABELS[normalizeDocumentType(document.type)],
+          document.issuer || null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        href: "/documents",
+        reason,
+        tone: days <= DOCUMENT_URGENT_DAYS ? "urgent" : "upcoming",
+        sortKey: days,
+        overdue: days < 0,
+      };
+
+      if (item.tone === "urgent") {
+        urgent.push(item);
+      } else {
+        upcoming.push(item);
+      }
+    }
+
+    urgent.sort((a, b) => a.sortKey - b.sortKey);
+    upcoming.sort((a, b) => a.sortKey - b.sortKey);
 
     const overdueCount =
       urgent.filter((item) => item.overdue).length +

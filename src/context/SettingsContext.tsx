@@ -13,6 +13,7 @@ import {
 export type Modules = {
   vehicles: boolean;
   insurance: boolean;
+  documents: boolean;
   beauty: boolean;
   stock: boolean;
 };

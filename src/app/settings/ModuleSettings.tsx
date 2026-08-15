@@ -1,8 +1,49 @@
 "use client";
 
+import Link from "next/link";
 import {useState} from "react";
 import AppShell from "@/components/dashboard/AppShell";
+import {NavIcon, type NavIconId} from "@/components/icons/NavIcons";
 import {Modules, useSettings} from "@/context/SettingsContext";
+
+const moduleRows: {
+  key: keyof Modules;
+  title: string;
+  description: string;
+  icon: NavIconId;
+}[] = [
+  {
+    key: "vehicles",
+    title: "Serwis pojazdów",
+    description:
+      "Olej, wycieraczki, opony, przeglądy i inne czynności serwisowe.",
+    icon: "vehicles",
+  },
+  {
+    key: "insurance",
+    title: "Ubezpieczenia",
+    description: "OC, AC, ubezpieczenie domu, mieszkania i inne polisy.",
+    icon: "insurance",
+  },
+  {
+    key: "documents",
+    title: "Dokumenty osobiste",
+    description: "Ważność dokumentów osobistych w jednym miejscu.",
+    icon: "documents",
+  },
+  {
+    key: "beauty",
+    title: "Uroda / wygląd",
+    description: "Fryzjer, kosmetyczka, paznokcie, barber i inne wizyty.",
+    icon: "visits",
+  },
+  {
+    key: "stock",
+    title: "Zapasy",
+    description: "Leki, soczewki i inne rzeczy, które mogą się kończyć.",
+    icon: "stock",
+  },
+];
 
 const ModuleSettings = () => {
   const {modules, isLoading, updateModules} = useSettings();
@@ -49,7 +90,7 @@ const ModuleSettings = () => {
         </p>
         <h1 className="font-display mt-3 text-4xl tracking-tight">Ustawienia</h1>
         <p className="mt-3 text-[var(--mt-muted)]">
-          Wybierz obszary życia, które MamTo ma pilnować za Ciebie.
+          Wybierz, co MamTo ma pilnować za Ciebie.
         </p>
 
         {isSaving && (
@@ -59,30 +100,42 @@ const ModuleSettings = () => {
         {error && <p className="mt-4 text-sm text-[var(--mt-signal)]">{error}</p>}
 
         <div className="mt-10 divide-y divide-[var(--mt-line)] border-y border-[var(--mt-line)]">
-          <ModuleRow
-            title="Serwis pojazdów"
-            description="Olej, wycieraczki, opony, przeglądy i inne czynności serwisowe."
-            enabled={modules.vehicles}
-            onToggle={() => handleToggle("vehicles")}
-          />
-          <ModuleRow
-            title="Ubezpieczenia"
-            description="OC, AC, ubezpieczenie domu, mieszkania i inne polisy."
-            enabled={modules.insurance}
-            onToggle={() => handleToggle("insurance")}
-          />
-          <ModuleRow
-            title="Uroda / wygląd"
-            description="Fryzjer, kosmetyczka, paznokcie, barber i inne wizyty."
-            enabled={modules.beauty}
-            onToggle={() => handleToggle("beauty")}
-          />
-          <ModuleRow
-            title="Zapasy"
-            description="Leki, soczewki i inne rzeczy, które mogą się kończyć."
-            enabled={modules.stock}
-            onToggle={() => handleToggle("stock")}
-          />
+          {moduleRows.map((row) => (
+            <ModuleRow
+              key={row.key}
+              title={row.title}
+              description={row.description}
+              icon={row.icon}
+              enabled={modules[row.key]}
+              onToggle={() => handleToggle(row.key)}
+            />
+          ))}
+        </div>
+
+        <div className="mt-12 border-t border-[var(--mt-line)] pt-8">
+          <p className="text-[0.65rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-muted)]">
+            Dokumenty prawne
+          </p>
+          <nav className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <Link
+              href="/regulamin"
+              className="text-[var(--mt-accent)] underline-offset-4 hover:underline"
+            >
+              Regulamin
+            </Link>
+            <Link
+              href="/polityka-prywatnosci"
+              className="text-[var(--mt-accent)] underline-offset-4 hover:underline"
+            >
+              Polityka prywatności
+            </Link>
+            <Link
+              href="/cookies"
+              className="text-[var(--mt-accent)] underline-offset-4 hover:underline"
+            >
+              Cookies
+            </Link>
+          </nav>
         </div>
       </div>
     </AppShell>
@@ -92,18 +145,36 @@ const ModuleSettings = () => {
 type ModuleRowProps = {
   title: string;
   description: string;
+  icon: NavIconId;
   enabled: boolean;
   onToggle: () => void;
 };
 
-const ModuleRow = ({title, description, enabled, onToggle}: ModuleRowProps) => {
+const ModuleRow = ({
+  title,
+  description,
+  icon,
+  enabled,
+  onToggle,
+}: ModuleRowProps) => {
   return (
     <div className="flex items-center justify-between gap-6 py-6">
-      <div>
-        <h2 className="font-display text-lg tracking-tight">{title}</h2>
-        <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--mt-muted)]">
-          {description}
-        </p>
+      <div className="flex items-start gap-4">
+        <span
+          className={`mt-0.5 flex h-11 w-11 items-center justify-center border transition ${
+            enabled
+              ? "border-[var(--mt-accent)] text-[var(--mt-accent)]"
+              : "border-[var(--mt-line)] text-[var(--mt-muted)]"
+          }`}
+        >
+          <NavIcon id={icon} active={enabled} className="h-5 w-5" />
+        </span>
+        <div>
+          <h2 className="font-display text-lg tracking-tight">{title}</h2>
+          <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--mt-muted)]">
+            {description}
+          </p>
+        </div>
       </div>
 
       <button

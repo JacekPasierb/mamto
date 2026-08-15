@@ -1,7 +1,8 @@
 "use client";
 
-import {useMemo} from "react";
+import {useMemo, useState} from "react";
 import {
+  SERVICE_GROUP_TYPES,
   SERVICE_TYPE_LABELS,
   type ServiceType,
 } from "@/lib/serviceTypes";
@@ -46,6 +47,9 @@ type TimelinePoint =
       type: ServiceType;
     };
 
+const TIMELINE_YEARS = 3;
+const COLLAPSED_LIMIT = 8;
+
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("pl-PL", {
     day: "numeric",
@@ -53,12 +57,41 @@ const formatDate = (value: string) =>
     year: "numeric",
   }).format(new Date(value));
 
+function isWithinYears(dateValue: string, years: number) {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return false;
+
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - years);
+  cutoff.setHours(0, 0, 0, 0);
+
+  return date.getTime() >= cutoff.getTime();
+}
+
 const ServiceMileageTimeline = ({
   services,
   currentMileage,
 }: ServiceMileageTimelineProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const maintenanceServices = useMemo(
+    () =>
+      services.filter((service) =>
+        SERVICE_GROUP_TYPES.maintenance.includes(service.type)
+      ),
+    [services]
+  );
+
+  const recentMaintenance = useMemo(
+    () =>
+      maintenanceServices.filter((service) =>
+        isWithinYears(service.performedAt, TIMELINE_YEARS)
+      ),
+    [maintenanceServices]
+  );
+
   const points = useMemo(() => {
-    const items: TimelinePoint[] = services
+    const items: TimelinePoint[] = recentMaintenance
       .filter((service) => service.mileage > 0)
       .map((service) => ({
         kind: "service" as const,
@@ -76,7 +109,7 @@ const ServiceMileageTimeline = ({
       title: "Aktualny przebieg",
     });
 
-    for (const service of services) {
+    for (const service of maintenanceServices) {
       if (
         service.nextDueMileage != null &&
         service.nextDueMileage > currentMileage
@@ -92,11 +125,16 @@ const ServiceMileageTimeline = ({
     }
 
     return items.sort((a, b) => a.mileage - b.mileage);
-  }, [services, currentMileage]);
+  }, [recentMaintenance, maintenanceServices, currentMileage]);
 
-  if (points.length === 0) {
+  if (points.length <= 1) {
     return null;
   }
+
+  const visiblePoints = isExpanded
+    ? points
+    : points.slice(Math.max(0, points.length - COLLAPSED_LIMIT));
+  const hiddenCount = points.length - visiblePoints.length;
 
   const minMileage = points[0].mileage;
   const maxMileage = points[points.length - 1].mileage;
@@ -117,8 +155,7 @@ const ServiceMileageTimeline = ({
             Oś czasu
           </h2>
           <p className="mt-2 max-w-lg text-sm text-[var(--mt-muted)]">
-            Historia ułożona według kilometrów — od najniższego do najwyższego
-            przebiegu.
+            Eksploatacja z ostatnich {TIMELINE_YEARS} lat — według przebiegu.
           </p>
         </div>
         <p className="font-display text-sm tabular-nums text-[var(--mt-accent)]">
@@ -143,10 +180,22 @@ const ServiceMileageTimeline = ({
         </div>
       </div>
 
-      <ol className="relative mt-10">
+      {hiddenCount > 0 && !isExpanded ? (
+        <div className="mt-8">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="text-sm font-medium text-[var(--mt-accent)] underline-offset-4 transition hover:underline"
+          >
+            Pokaż wcześniejsze ({hiddenCount})
+          </button>
+        </div>
+      ) : null}
+
+      <ol className="relative mt-6">
         <span className="absolute top-2 bottom-2 left-[0.35rem] w-px bg-[var(--mt-line)]" />
 
-        {points.map((point) => {
+        {visiblePoints.map((point) => {
           const sourceService =
             point.kind === "service"
               ? services.find((service) => service._id === point.id)
@@ -156,60 +205,72 @@ const ServiceMileageTimeline = ({
             : null;
 
           return (
-          <li key={point.id} className="relative flex gap-5 py-5 pl-1">
-            <span
-              className={`relative z-10 mt-1.5 h-2.5 w-2.5 shrink-0 rounded-sm ${
-                point.kind === "now"
-                  ? "bg-[var(--mt-accent)] ring-4 ring-[var(--mt-accent-soft)]"
-                  : point.kind === "due"
-                    ? "border border-[var(--mt-signal)] bg-white"
-                    : "bg-[var(--mt-ink)]"
-              }`}
-            />
+            <li key={point.id} className="relative flex gap-5 py-5 pl-1">
+              <span
+                className={`relative z-10 mt-1.5 h-2.5 w-2.5 shrink-0 rounded-sm ${
+                  point.kind === "now"
+                    ? "bg-[var(--mt-accent)] ring-4 ring-[var(--mt-accent-soft)]"
+                    : point.kind === "due"
+                      ? "border border-[var(--mt-signal)] bg-white"
+                      : "bg-[var(--mt-ink)]"
+                }`}
+              />
 
-            <div className="min-w-0 flex-1 border-b border-[var(--mt-line)] pb-5">
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-                <p className="font-display text-xl tabular-nums tracking-tight">
-                  {point.mileage.toLocaleString("pl-PL")}{" "}
-                  <span className="text-sm text-[var(--mt-muted)]">km</span>
+              <div className="min-w-0 flex-1 border-b border-[var(--mt-line)] pb-5">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                  <p className="font-display text-xl tabular-nums tracking-tight">
+                    {point.mileage.toLocaleString("pl-PL")}{" "}
+                    <span className="text-sm text-[var(--mt-muted)]">km</span>
+                  </p>
+                  {point.kind === "service" ? (
+                    <p className="text-sm text-[var(--mt-muted)]">
+                      {formatDate(point.date)}
+                    </p>
+                  ) : null}
+                </div>
+
+                <p
+                  className={`mt-2 text-sm ${
+                    point.kind === "now"
+                      ? "font-medium text-[var(--mt-accent)]"
+                      : point.kind === "due"
+                        ? "text-[var(--mt-signal)]"
+                        : "text-[var(--mt-ink)]"
+                  }`}
+                >
+                  {point.kind === "service"
+                    ? `${SERVICE_TYPE_LABELS[point.type]} · ${point.title}`
+                    : point.title}
                 </p>
-                {point.kind === "service" ? (
-                  <p className="text-sm text-[var(--mt-muted)]">
-                    {formatDate(point.date)}
+
+                {workshopDisplay ? (
+                  <p className="mt-1 text-xs text-[var(--mt-muted)]">
+                    {workshopDisplay.label}: {workshopDisplay.value}
+                  </p>
+                ) : null}
+
+                {point.kind === "due" ? (
+                  <p className="mt-1 text-xs text-[var(--mt-muted)]">
+                    Planowany przebieg · {SERVICE_TYPE_LABELS[point.type]}
                   </p>
                 ) : null}
               </div>
-
-              <p
-                className={`mt-2 text-sm ${
-                  point.kind === "now"
-                    ? "font-medium text-[var(--mt-accent)]"
-                    : point.kind === "due"
-                      ? "text-[var(--mt-signal)]"
-                      : "text-[var(--mt-ink)]"
-                }`}
-              >
-                {point.kind === "service"
-                  ? `${SERVICE_TYPE_LABELS[point.type]} · ${point.title}`
-                  : point.title}
-              </p>
-
-              {workshopDisplay ? (
-                <p className="mt-1 text-xs text-[var(--mt-muted)]">
-                  {workshopDisplay.label}: {workshopDisplay.value}
-                </p>
-              ) : null}
-
-              {point.kind === "due" ? (
-                <p className="mt-1 text-xs text-[var(--mt-muted)]">
-                  Planowany przebieg · {SERVICE_TYPE_LABELS[point.type]}
-                </p>
-              ) : null}
-            </div>
-          </li>
-        );
+            </li>
+          );
         })}
       </ol>
+
+      {isExpanded && hiddenCount > 0 ? (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(false)}
+            className="text-sm font-medium text-[var(--mt-muted)] underline-offset-4 transition hover:text-[var(--mt-accent)] hover:underline"
+          >
+            Zwiń listę
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 };

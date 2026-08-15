@@ -2,11 +2,12 @@
 
 import {useEffect, useState} from "react";
 import {
-  SERVICE_FORM_GROUPS,
+  getServiceFormGroups,
+  getServiceInterval,
   SERVICE_GROUP_TYPES,
-  SERVICE_INTERVALS,
   SERVICE_TYPE_LABELS,
   type ServiceType,
+  type VehicleKind,
 } from "@/lib/serviceTypes";
 import {
   getDefaultNextDueAtInput,
@@ -36,6 +37,7 @@ export type ServiceFormValues = {
 
 type ServiceFormModalProps = {
   vehicleId: string;
+  vehicleKind?: VehicleKind;
   currentMileage: number;
   isOpen: boolean;
   service?: ServiceFormValues | null;
@@ -59,6 +61,7 @@ const toDateInput = (value: string | null | undefined) => {
 
 const ServiceFormModal = ({
   vehicleId,
+  vehicleKind = "car",
   currentMileage,
   isOpen,
   service = null,
@@ -66,6 +69,7 @@ const ServiceFormModal = ({
   onSaved,
 }: ServiceFormModalProps) => {
   const isEditing = Boolean(service);
+  const formGroups = getServiceFormGroups(vehicleKind);
 
   const [type, setType] = useState<ServiceType>("oil");
   const [title, setTitle] = useState(SERVICE_TYPE_LABELS.oil);
@@ -108,10 +112,14 @@ const ServiceFormModal = ({
       setTitle(SERVICE_TYPE_LABELS.oil);
       setPerformedAt(today);
       setMileage(String(startingMileage || ""));
-      setNextDueAt(getDefaultNextDueAtInput("oil", today));
+      setNextDueAt(getDefaultNextDueAtInput("oil", today, vehicleKind));
       setNextDueMileage(
         (() => {
-          const next = getDefaultNextDueMileage("oil", startingMileage);
+          const next = getDefaultNextDueMileage(
+            "oil",
+            startingMileage,
+            vehicleKind
+          );
           return next == null ? "" : String(next);
         })()
       );
@@ -123,22 +131,26 @@ const ServiceFormModal = ({
     }
 
     setError("");
-  }, [isOpen, service, currentMileage]);
+  }, [isOpen, service, currentMileage, vehicleKind]);
 
   if (!isOpen) return null;
 
   const isRepair = SERVICE_GROUP_TYPES.repairs.includes(type);
+  const activeInterval = getServiceInterval(type, vehicleKind);
 
   const applyIntervalDefaults = (
     nextType: ServiceType,
     nextPerformedAt: string,
     nextMileageValue: string
   ) => {
-    setNextDueAt(getDefaultNextDueAtInput(nextType, nextPerformedAt));
+    setNextDueAt(
+      getDefaultNextDueAtInput(nextType, nextPerformedAt, vehicleKind)
+    );
 
     const nextMileage = getDefaultNextDueMileage(
       nextType,
-      Number(nextMileageValue) || 0
+      Number(nextMileageValue) || 0,
+      vehicleKind
     );
     setNextDueMileage(nextMileage == null ? "" : String(nextMileage));
   };
@@ -274,7 +286,7 @@ const ServiceFormModal = ({
               onChange={(e) => handleTypeChange(e.target.value as ServiceType)}
               className={fieldClass}
             >
-              {SERVICE_FORM_GROUPS.map(({group, types}) => (
+              {formGroups.map(({group, types}) => (
                 <optgroup
                   key={group}
                   label={
@@ -376,15 +388,16 @@ const ServiceFormModal = ({
             </div>
           </div>
 
-          {SERVICE_INTERVALS[type] ? (
+          {activeInterval ? (
             <p className="text-xs text-[var(--mt-muted)]">
-              Typowy interwał:{" "}
+              Typowy interwał
+              {vehicleKind === "motorcycle" ? " dla motocykla" : ""}:{" "}
               {[
-                SERVICE_INTERVALS[type]?.months
-                  ? `co ${SERVICE_INTERVALS[type]!.months} mies.`
+                activeInterval.months
+                  ? `co ${activeInterval.months} mies.`
                   : null,
-                SERVICE_INTERVALS[type]?.km
-                  ? `co ${SERVICE_INTERVALS[type]!.km.toLocaleString("pl-PL")} km`
+                activeInterval.km
+                  ? `co ${activeInterval.km.toLocaleString("pl-PL")} km`
                   : null,
               ]
                 .filter(Boolean)
