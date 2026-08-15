@@ -91,10 +91,7 @@ const DashboardHeader = ({dayStatus}: DashboardHeaderProps) => {
 
   if (!isLoading) {
     if (overdueCount > 0) {
-      statusLabel =
-        overdueCount === 1
-          ? "1 rzecz po terminie"
-          : `${overdueCount} rzeczy po terminie`;
+      statusLabel = "Są sprawy po terminie";
       statusDetail = canOpenPanel
         ? isOpen
           ? "Kliknij, aby zamknąć"
@@ -102,10 +99,7 @@ const DashboardHeader = ({dayStatus}: DashboardHeaderProps) => {
         : "Wymaga Twojej uwagi";
       statusColor = "var(--mt-signal)";
     } else if (attentionCount > 0) {
-      statusLabel =
-        attentionCount === 1
-          ? "1 rzecz do pilnowania"
-          : `${attentionCount} rzeczy do pilnowania`;
+      statusLabel = "Są rzeczy do pilnowania";
       statusDetail = "Zbliżają się terminy";
       statusColor = "var(--mt-signal)";
     }

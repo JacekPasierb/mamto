@@ -271,6 +271,108 @@ body {
   animation: mt-plate-shine 1.1s ease-out both;
 }
 
+.mt-attention-icon {
+  width: 2.35rem;
+  height: 2.35rem;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.mt-attention-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      color-mix(in srgb, currentColor 12%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, currentColor 5%, white);
+  color: inherit;
+  transition:
+    border-color 0.3s ease,
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.group\/attn:hover .mt-attention-mark {
+  border-color: color-mix(in srgb, currentColor 55%, transparent);
+  transform: translateY(-1px);
+}
+
+.mt-attention-sweep {
+  transform-origin: 20px 20px;
+  animation: mt-attn-sweep 4.8s linear infinite;
+}
+
+.mt-attention-bead {
+  animation: mt-attn-bead 3.6s ease-in-out infinite;
+}
+
+.mt-attention-fill {
+  transform-origin: center bottom;
+  animation: mt-attn-level 3.2s ease-in-out infinite;
+}
+
+.mt-attention-core {
+  animation: mt-attn-core 2.8s ease-in-out infinite;
+}
+
+@keyframes mt-attn-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes mt-attn-bead {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-5px, 4px);
+  }
+}
+
+@keyframes mt-attn-level {
+  0%,
+  100% {
+    transform: scaleY(0.82);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes mt-attn-core {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-attention-sweep,
+  .mt-attention-bead,
+  .mt-attention-fill,
+  .mt-attention-core {
+    animation: none;
+  }
+}
+
 .mt-nav-icon {
   width: 1.25rem;
   height: 1.25rem;

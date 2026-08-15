@@ -1,5 +1,10 @@
 import Link from "next/link";
 
+import {
+  AttentionIcon,
+  type AttentionIconId,
+} from "@/components/icons/AttentionIcons";
+
 export type ReminderListItem = {
   id: string;
   title: string;
@@ -19,6 +24,7 @@ type ReminderSectionProps = {
   description: string;
   emptyText: string;
   tone?: "signal" | "default" | "ok";
+  icon?: AttentionIconId;
   items?: ReminderListItem[];
   isLoading?: boolean;
   onRefill?: (item: ReminderListItem) => void;
@@ -36,26 +42,20 @@ const AttentionMark = ({label}: {label: string}) => (
     style={{color: "var(--mt-signal)"}}
     title={label}
   >
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden
-    >
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M12 3.5 21 19H3L12 3.5Z"
+        d="M12 4.2 19.8 18.5H4.2L12 4.2Z"
         stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
+        strokeWidth="1.7"
+        strokeLinejoin="miter"
       />
       <path
-        d="M12 10v4.5"
+        d="M12 10.2v4"
         stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
+        strokeWidth="1.7"
+        strokeLinecap="square"
       />
-      <circle cx="12" cy="17" r="1" fill="currentColor" />
+      <rect x="11.15" y="16.2" width="1.7" height="1.7" fill="currentColor" />
     </svg>
     {label}
   </span>
@@ -66,20 +66,29 @@ const ReminderSection = ({
   description,
   emptyText,
   tone = "default",
+  icon,
   items = [],
   isLoading = false,
   onRefill,
 }: ReminderSectionProps) => {
   const overdueInSection = items.filter((item) => item.overdue).length;
+  const accent = toneAccent[tone];
 
   return (
-    <section>
-      <div className="flex items-start gap-4">
-        <span
-          className="mt-2 h-9 w-[2px] shrink-0"
-          style={{background: toneAccent[tone]}}
-          aria-hidden
-        />
+    <section className="group/attn">
+      <div className="flex items-start gap-3.5">
+        {icon ? (
+          <span className="mt-attention-mark" style={{color: accent}}>
+            <AttentionIcon id={icon} />
+          </span>
+        ) : (
+          <span
+            className="mt-2 h-9 w-[2px] shrink-0"
+            style={{background: accent}}
+            aria-hidden
+          />
+        )}
+
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="font-display text-xl tracking-tight">{title}</h2>
@@ -109,9 +118,7 @@ const ReminderSection = ({
                     <p className="font-display text-[1.05rem] tracking-tight transition group-hover:text-[var(--mt-accent)]">
                       {item.title}
                     </p>
-                    {item.overdue ? (
-                      <AttentionMark label="Uwaga" />
-                    ) : null}
+                    {item.overdue ? <AttentionMark label="Uwaga" /> : null}
                   </div>
                   <p className="mt-1 text-sm text-[var(--mt-muted)]">
                     {item.subtitle}
@@ -119,9 +126,7 @@ const ReminderSection = ({
                   <p
                     className="mt-2 text-sm font-medium"
                     style={{
-                      color: item.overdue
-                        ? "var(--mt-signal)"
-                        : toneAccent[tone],
+                      color: item.overdue ? "var(--mt-signal)" : accent,
                     }}
                   >
                     {item.reason}

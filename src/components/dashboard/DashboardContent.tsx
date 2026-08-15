@@ -10,6 +10,7 @@ import LifeDomains from "./LifeDomains";
 import QuickAddCard from "./QuickAddCard";
 import QuickAddModal from "./QuickAddModal";
 import ReminderSection, {type ReminderListItem} from "./ReminderSection";
+import {IconActionField} from "@/components/icons/AttentionIcons";
 
 type RemindersResponse = {
   urgent: ReminderListItem[];
@@ -125,20 +126,26 @@ const DashboardContent = () => {
 
         <div className="mt-rise mt-rise-delay-3 mt-12">
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-[0.62rem] font-medium uppercase tracking-[0.28em] text-[var(--mt-muted)]">
-                Uwaga dnia
-              </p>
-              <h2 className="font-display mt-2 text-2xl tracking-tight">
-                Co wymaga Twojego ruchu
-              </h2>
+            <div className="flex items-start gap-4">
+              <span
+                className="mt-attention-mark"
+                style={{color: "var(--mt-accent)"}}
+              >
+                <IconActionField />
+              </span>
+              <div>
+                <p className="text-[0.62rem] font-medium uppercase tracking-[0.28em] text-[var(--mt-muted)]">
+                  Uwaga dnia
+                </p>
+                <h2 className="font-display mt-2 text-2xl tracking-tight">
+                  Co wymaga Twojego ruchu
+                </h2>
+              </div>
             </div>
 
             {!isLoading && reminders.summary.overdueCount > 0 ? (
               <p className="text-sm font-medium text-[var(--mt-signal)]">
-                {reminders.summary.overdueCount === 1
-                  ? "1 pozycja po terminie"
-                  : `${reminders.summary.overdueCount} pozycji po terminie`}
+                Są sprawy po terminie
               </p>
             ) : null}
           </div>
@@ -149,6 +156,7 @@ const DashboardContent = () => {
               description="Rzeczy, którymi warto zająć się teraz."
               emptyText="Brak pilnych spraw. Oddychaj spokojnie."
               tone="signal"
+              icon="urgent"
               items={reminders.urgent}
               isLoading={isLoading}
             />
@@ -158,6 +166,7 @@ const DashboardContent = () => {
               description="Najbliższe terminy i przypomnienia."
               emptyText="Kalendarz jest czysty."
               tone="default"
+              icon="upcoming"
               items={reminders.upcoming}
               isLoading={isLoading}
             />
@@ -167,6 +176,7 @@ const DashboardContent = () => {
               description="Rzeczy, które niedługo mogą się skończyć."
               emptyText="Zapasy wyglądają dobrze."
               tone="ok"
+              icon="levels"
               items={reminders.stock}
               isLoading={isLoading}
               onRefill={handleRefill}
