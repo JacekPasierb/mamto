@@ -8,9 +8,10 @@ import InsuranceFormModal from "@/components/insurance/InsuranceFormModal";
 import DocumentFormModal from "@/components/documents/DocumentFormModal";
 import StockFormModal from "@/components/stock/StockFormModal";
 import VehicleFormModal from "@/components/vehicles/VehicleFormModal";
+import VisitFormModal from "@/components/visits/VisitFormModal";
 import {useSettings, type Modules} from "@/context/SettingsContext";
 
-type QuickKind = "vehicle" | "insurance" | "documents" | "stock";
+type QuickKind = "vehicle" | "insurance" | "documents" | "visit" | "stock";
 
 type QuickOption = {
   kind: QuickKind;
@@ -41,6 +42,13 @@ const OPTIONS: QuickOption[] = [
     hint: "Ważność dokumentu",
     icon: "documents",
     moduleKey: "documents",
+  },
+  {
+    kind: "visit",
+    label: "Wizyta",
+    hint: "Lekarz, fryzjer, paznokcie…",
+    icon: "visits",
+    moduleKey: "beauty",
   },
   {
     kind: "stock",
@@ -152,6 +160,12 @@ const QuickAddModal = ({isOpen, onClose, onSaved}: QuickAddModalProps) => {
         onClose={handleFormClose}
         onSaved={handleSaved}
       />
+    );
+  }
+
+  if (step === "visit") {
+    return (
+      <VisitFormModal isOpen onClose={handleFormClose} onSaved={handleSaved} />
     );
   }
 

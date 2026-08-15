@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+import {
+  IconMileage,
+  VehicleKindIcon,
+} from "@/components/icons/VehicleIcons";
 import type {Vehicle} from "./VehiclesPage";
 import PolishPlate from "./PolishPlate";
 
@@ -16,14 +20,28 @@ const VehicleCard = ({vehicle}: VehicleCardProps) => {
         : "Inny pojazd";
 
   const isMotorcycle = vehicle.type === "motorcycle";
+  const kindId =
+    vehicle.type === "motorcycle"
+      ? "motorcycle"
+      : vehicle.type === "other"
+        ? "other"
+        : "car";
 
   return (
-    <article className="group border-b border-[var(--mt-line)] py-7 md:border-r md:px-6 md:first:pl-0 md:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:[&:nth-child(3n)]:border-r-0">
-      <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[var(--mt-muted)]">
-        {typeLabel}
-      </p>
+    <article className="group/vehicle border-b border-[var(--mt-line)] py-7 md:border-r md:px-6 md:first:pl-0 md:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:[&:nth-child(3n)]:border-r-0">
+      <div className="flex items-start justify-between gap-3">
+        <span
+          className="mt-vehicle-mark"
+          style={{color: "var(--mt-accent)"}}
+        >
+          <VehicleKindIcon id={kindId} />
+        </span>
+        <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[var(--mt-muted)]">
+          {typeLabel}
+        </p>
+      </div>
 
-      <h2 className="font-display mt-3 text-2xl tracking-tight transition group-hover:text-[var(--mt-accent)]">
+      <h2 className="font-display mt-4 text-2xl tracking-tight transition group-hover/vehicle:text-[var(--mt-accent)]">
         {vehicle.name}
       </h2>
 
@@ -45,13 +63,21 @@ const VehicleCard = ({vehicle}: VehicleCardProps) => {
         </div>
       </div>
 
-      <div className="mt-6">
-        <p className="text-xs uppercase tracking-[0.18em] text-[var(--mt-muted)]">
-          Przebieg
-        </p>
-        <p className="font-display mt-1 text-xl tabular-nums">
-          {vehicle.mileage.toLocaleString("pl-PL")} km
-        </p>
+      <div className="mt-6 flex items-center gap-3">
+        <span
+          className="mt-vehicle-mark !h-10 !w-10"
+          style={{color: "var(--mt-ink)"}}
+        >
+          <IconMileage className="!h-5 !w-5" />
+        </span>
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-[var(--mt-muted)]">
+            Przebieg
+          </p>
+          <p className="font-display mt-0.5 text-xl tabular-nums">
+            {vehicle.mileage.toLocaleString("pl-PL")} km
+          </p>
+        </div>
       </div>
 
       <Link

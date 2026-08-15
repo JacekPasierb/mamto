@@ -23,7 +23,7 @@ const UserSettingsSchema = new Schema(
       },
       beauty: {
         type: Boolean,
-        default: false,
+        default: true,
       },
       stock: {
         type: Boolean,

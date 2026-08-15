@@ -22,7 +22,7 @@ const domains = [
   },
   {
     title: "Wizyty",
-    line: "Fryzjer, kosmetyczka i inne spotkania, o których łatwo zapomnieć.",
+    line: "Lekarze, stomatolodzy, fryzjer, paznokcie — systematycznie.",
   },
 ];
 

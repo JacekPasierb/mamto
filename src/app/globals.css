@@ -373,6 +373,45 @@ body {
   }
 }
 
+.mt-vehicle-icon {
+  width: 2.35rem;
+  height: 2.35rem;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.mt-vehicle-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      color-mix(in srgb, currentColor 12%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, currentColor 5%, white);
+  color: inherit;
+  transition:
+    border-color 0.3s ease,
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.group:hover .mt-vehicle-mark,
+.group\/vehicle:hover .mt-vehicle-mark {
+  border-color: color-mix(in srgb, currentColor 55%, transparent);
+  transform: translateY(-1px);
+}
+
+.mt-vehicle-tab-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+}
+
 .mt-nav-icon {
   width: 1.25rem;
   height: 1.25rem;

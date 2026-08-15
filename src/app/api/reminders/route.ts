@@ -22,8 +22,17 @@ import {
 import {SERVICE_TYPE_LABELS, getServiceInterval, type ServiceType, type VehicleKind} from "@/lib/serviceTypes";
 import {enrichStockItem} from "@/lib/stockHelpers";
 import {STOCK_CATEGORY_LABELS, type StockCategory} from "@/lib/stockTypes";
+import {enrichVisit} from "@/lib/visitHelpers";
+import {
+  VISIT_TYPE_LABELS,
+  VISIT_UPCOMING_DAYS,
+  VISIT_URGENT_DAYS,
+  normalizeVisitType,
+  type VisitType,
+} from "@/lib/visitTypes";
 import InsurancePolicy from "@/models/InsurancePolicy";
 import PersonalDocument from "@/models/PersonalDocument";
+import PersonalVisit from "@/models/PersonalVisit";
 import StockItem from "@/models/StockItem";
 import Vehicle from "@/models/Vehicle";
 import VehicleService from "@/models/VehicleService";
@@ -386,6 +395,50 @@ export async function GET() {
         href: "/documents",
         reason,
         tone: days <= DOCUMENT_URGENT_DAYS ? "urgent" : "upcoming",
+        sortKey: days,
+        overdue: days < 0,
+      };
+
+      if (item.tone === "urgent") {
+        urgent.push(item);
+      } else {
+        upcoming.push(item);
+      }
+    }
+
+    const personalVisits = (await PersonalVisit.find({userId}).lean()) as {
+      _id: unknown;
+      name: string;
+      type: VisitType;
+      providerName?: string;
+      nextDueAt: Date;
+    }[];
+
+    for (const visit of personalVisits) {
+      const enriched = enrichVisit(visit, now);
+      const days = enriched.daysUntilDue;
+
+      if (days > VISIT_UPCOMING_DAYS) continue;
+
+      const reason =
+        days < 0
+          ? `po terminie o ${Math.abs(days)} dni`
+          : days === 0
+            ? "wizyta dziś"
+            : `wizyta za ${days} dni`;
+
+      const item: ReminderItem = {
+        id: `visit-${String(visit._id)}`,
+        title: visit.name,
+        subtitle: [
+          VISIT_TYPE_LABELS[normalizeVisitType(visit.type)],
+          visit.providerName || null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        href: "/visits",
+        reason,
+        tone: days <= VISIT_URGENT_DAYS ? "urgent" : "upcoming",
         sortKey: days,
         overdue: days < 0,
       };

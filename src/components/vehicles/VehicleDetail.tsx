@@ -16,6 +16,13 @@ import {
 import {
   getServiceWorkshopDisplay,
 } from "@/lib/workshopTypes";
+import {
+  IconFleet,
+  IconMileage,
+  VehicleKindIcon,
+  VehicleServiceIcon,
+  type VehicleServiceIconId,
+} from "@/components/icons/VehicleIcons";
 import PolishPlate from "./PolishPlate";
 import ServiceFormModal, {type ServiceFormValues} from "./ServiceFormModal";
 import ServiceMileageTimeline from "./ServiceMileageTimeline";
@@ -272,20 +279,36 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
         </Link>
 
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-[0.65rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-accent)]">
-              Serwis pojazdu · {typeLabel}
-            </p>
+          <div className="flex items-start gap-4">
+            <span
+              className="mt-vehicle-mark"
+              style={{color: "var(--mt-accent)"}}
+            >
+              <VehicleKindIcon
+                id={
+                  vehicle.type === "motorcycle"
+                    ? "motorcycle"
+                    : vehicle.type === "other"
+                      ? "other"
+                      : "car"
+                }
+              />
+            </span>
+            <div>
+              <p className="text-[0.65rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-accent)]">
+                Serwis pojazdu · {typeLabel}
+              </p>
 
-            <h1 className="font-display mt-3 text-4xl tracking-tight">
-              {vehicle.name}
-            </h1>
+              <h1 className="font-display mt-3 text-4xl tracking-tight">
+                {vehicle.name}
+              </h1>
 
-            <p className="mt-2 text-[var(--mt-muted)]">
-              {[vehicle.brand, vehicle.model, vehicle.year]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
+              <p className="mt-2 text-[var(--mt-muted)]">
+                {[vehicle.brand, vehicle.model, vehicle.year]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            </div>
           </div>
 
           <div className="flex shrink-0 flex-wrap gap-4">
@@ -323,16 +346,24 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
             </div>
 
             <div className="grid w-full grid-cols-3 gap-4 text-center sm:max-w-md sm:text-left">
-              <div>
-                <p className="text-[0.65rem] uppercase tracking-[0.18em] text-[var(--mt-muted)]">
-                  Przebieg
-                </p>
-                <p className="font-display mt-2 text-2xl tabular-nums text-[var(--mt-ink)]">
-                  {mileage.toLocaleString("pl-PL")}
-                  <span className="ml-1 text-sm font-sans text-[var(--mt-muted)]">
-                    km
-                  </span>
-                </p>
+              <div className="flex flex-col items-center gap-2 sm:items-start">
+                <span
+                  className="mt-vehicle-mark !h-9 !w-9"
+                  style={{color: "var(--mt-ink)"}}
+                >
+                  <IconMileage className="!h-[1.15rem] !w-[1.15rem]" />
+                </span>
+                <div>
+                  <p className="text-[0.65rem] uppercase tracking-[0.18em] text-[var(--mt-muted)]">
+                    Przebieg
+                  </p>
+                  <p className="font-display mt-1 text-2xl tabular-nums text-[var(--mt-ink)]">
+                    {mileage.toLocaleString("pl-PL")}
+                    <span className="ml-1 text-sm font-sans text-[var(--mt-muted)]">
+                      km
+                    </span>
+                  </p>
+                </div>
               </div>
               <div>
                 <p className="text-[0.65rem] uppercase tracking-[0.18em] text-[var(--mt-muted)]">
@@ -358,13 +389,21 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
         </div>
 
         <div className="mt-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="font-display text-2xl tracking-tight">Serwis</h2>
-            <p className="mt-2 text-[var(--mt-muted)]">
-              {vehicle.type === "motorcycle"
-                ? "Olej, łańcuch, zawory, opony i inne czynności."
-                : "Olej, wycieraczki, filtry, opony i inne czynności."}
-            </p>
+          <div className="flex items-start gap-4">
+            <span
+              className="mt-vehicle-mark"
+              style={{color: "var(--mt-ink)"}}
+            >
+              <IconFleet />
+            </span>
+            <div>
+              <h2 className="font-display text-2xl tracking-tight">Serwis</h2>
+              <p className="mt-2 text-[var(--mt-muted)]">
+                {vehicle.type === "motorcycle"
+                  ? "Olej, łańcuch, zawory, opony i inne czynności."
+                  : "Olej, wycieraczki, filtry, opony i inne czynności."}
+              </p>
+            </div>
           </div>
 
           <button
@@ -383,6 +422,14 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
         >
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
+            const iconId: VehicleServiceIconId =
+              tab.id === "maintenance"
+                ? "maintenance"
+                : tab.id === "repairs"
+                  ? "repairs"
+                  : tab.id === "inspections"
+                    ? "inspections"
+                    : "all";
 
             return (
               <button
@@ -391,15 +438,19 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => handleTabChange(tab.id)}
-                className={`relative shrink-0 px-3 py-3 text-sm transition sm:px-4 ${
+                className={`relative flex shrink-0 items-center gap-2 px-3 py-3 text-sm transition sm:px-4 ${
                   isActive
                     ? "font-medium text-[var(--mt-ink)]"
                     : "text-[var(--mt-muted)] hover:text-[var(--mt-ink)]"
                 }`}
               >
+                <VehicleServiceIcon
+                  id={iconId}
+                  className="mt-vehicle-tab-icon"
+                />
                 <span>{tab.label}</span>
                 <span
-                  className={`ml-2 tabular-nums ${
+                  className={`tabular-nums ${
                     isActive
                       ? "text-[var(--mt-accent)]"
                       : "text-[var(--mt-muted)]/70"

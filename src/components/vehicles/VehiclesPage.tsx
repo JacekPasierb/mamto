@@ -3,6 +3,7 @@
 import {useEffect, useState} from "react";
 
 import AppShell from "@/components/dashboard/AppShell";
+import {IconFleet} from "@/components/icons/VehicleIcons";
 import VehicleFormModal from "./VehicleFormModal";
 import VehicleCard from "./VehicleCard";
 
@@ -71,14 +72,19 @@ const VehiclesPage = () => {
     <AppShell>
       <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
         <div className="flex flex-col gap-6 border-b border-[var(--mt-line)] pb-8 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[0.65rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-accent)]">
-              Moduł 02
-            </p>
-            <h1 className="font-display mt-3 text-4xl tracking-tight">Pojazdy</h1>
-            <p className="mt-3 max-w-lg text-[var(--mt-muted)]">
-              Przeglądy, olej, opony — wszystko, o czym nie wolno zapomnieć.
-            </p>
+          <div className="flex items-start gap-4">
+            <span
+              className="mt-vehicle-mark"
+              style={{color: "var(--mt-accent)"}}
+            >
+              <IconFleet />
+            </span>
+            <div>
+              <h1 className="font-display text-4xl tracking-tight">Pojazdy</h1>
+              <p className="mt-3 max-w-lg text-[var(--mt-muted)]">
+                Przeglądy, olej, opony — wszystko, o czym nie wolno zapomnieć.
+              </p>
+            </div>
           </div>
 
           <button
@@ -93,8 +99,14 @@ const VehiclesPage = () => {
         {isLoading ? (
           <p className="mt-10 text-[var(--mt-muted)]">Ładowanie pojazdów…</p>
         ) : vehicles.length === 0 ? (
-          <div className="mt-10 border border-dashed border-[var(--mt-line)] bg-white/40 px-6 py-14 text-center">
-            <p className="text-[var(--mt-muted)]">
+          <div className="mt-10 flex flex-col items-center border border-dashed border-[var(--mt-line)] bg-white/40 px-6 py-14 text-center">
+            <span
+              className="mt-vehicle-mark"
+              style={{color: "var(--mt-accent)"}}
+            >
+              <IconFleet />
+            </span>
+            <p className="mt-5 text-[var(--mt-muted)]">
               Nie masz jeszcze żadnego pojazdu.
             </p>
           </div>

@@ -33,8 +33,9 @@ const moduleRows: {
   },
   {
     key: "beauty",
-    title: "Uroda / wygląd",
-    description: "Fryzjer, kosmetyczka, paznokcie, barber i inne wizyty.",
+    title: "Wizyty",
+    description:
+      "Lekarze, stomatolodzy, fryzjer, paznokcie, rzęsy i inne systematyczne wizyty.",
     icon: "visits",
   },
   {

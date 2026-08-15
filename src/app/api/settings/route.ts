@@ -8,7 +8,7 @@ const DEFAULT_MODULES = {
   vehicles: true,
   insurance: true,
   documents: true,
-  beauty: false,
+  beauty: true,
   stock: true,
 };
 
@@ -39,12 +39,24 @@ export async function GET() {
         userId,
         modules: DEFAULT_MODULES,
       });
-    } else if (settings.modules?.documents === undefined) {
-      settings = await UserSettings.findOneAndUpdate(
-        {userId},
-        {$set: {"modules.documents": true}},
-        {new: true}
-      );
+    } else {
+      const moduleFixes: Record<string, boolean> = {};
+
+      if (settings.modules?.documents === undefined) {
+        moduleFixes["modules.documents"] = true;
+      }
+
+      if (settings.modules?.beauty === undefined) {
+        moduleFixes["modules.beauty"] = true;
+      }
+
+      if (Object.keys(moduleFixes).length > 0) {
+        settings = await UserSettings.findOneAndUpdate(
+          {userId},
+          {$set: moduleFixes},
+          {new: true}
+        );
+      }
     }
 
     const plain = settings!.toObject();

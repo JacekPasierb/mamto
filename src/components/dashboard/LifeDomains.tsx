@@ -41,9 +41,9 @@ const domains: {
   },
   {
     key: "beauty",
-    href: "/beauty",
+    href: "/visits",
     title: "Wizyty",
-    line: "Fryzjer, kosmetyczka i inne terminy.",
+    line: "Lekarze, stomatolodzy, fryzjer, paznokcie — systematycznie.",
     icon: "visits",
   },
 ];

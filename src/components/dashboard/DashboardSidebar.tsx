@@ -44,9 +44,9 @@ const links: NavLink[] = [
     moduleKey: "documents",
   },
   {
-    href: "/beauty",
+    href: "/visits",
     label: "Wizyty",
-    hint: "Fryzjer i pielęgnacja",
+    hint: "Lekarze, uroda, fryzjer",
     icon: "visits",
     moduleKey: "beauty",
   },

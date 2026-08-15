@@ -2,6 +2,17 @@
 
 import {useEffect, useState} from "react";
 
+import {
+  VehicleKindIcon,
+  type VehicleKindIconId,
+} from "@/components/icons/VehicleIcons";
+
+const VEHICLE_TYPES: {id: VehicleKindIconId; label: string}[] = [
+  {id: "car", label: "Samochód"},
+  {id: "motorcycle", label: "Motocykl"},
+  {id: "other", label: "Inny"},
+];
+
 export type VehicleFormValues = {
   _id: string;
   name: string;
@@ -177,20 +188,48 @@ const VehicleFormModal = ({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-              Typ
-            </label>
-            <select
-              value={type}
-              onChange={(e) =>
-                setType(e.target.value as "car" | "motorcycle" | "other")
-              }
-              className={fieldClass}
+            <p className="mb-2 block text-sm text-[var(--mt-muted)]">Typ</p>
+            <div
+              role="radiogroup"
+              aria-label="Typ pojazdu"
+              className="grid grid-cols-3 gap-2"
             >
-              <option value="car">Samochód</option>
-              <option value="motorcycle">Motocykl</option>
-              <option value="other">Inny</option>
-            </select>
+              {VEHICLE_TYPES.map((option) => {
+                const selected = type === option.id;
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setType(option.id)}
+                    className={`flex flex-col items-center gap-2 border px-2 py-3 transition ${
+                      selected
+                        ? "border-[var(--mt-accent)] bg-[var(--mt-accent)]/10 text-[var(--mt-ink)]"
+                        : "border-[var(--mt-line)] bg-[var(--mt-bg)] text-[var(--mt-muted)] hover:border-[var(--mt-ink)]/30 hover:text-[var(--mt-ink)]"
+                    }`}
+                  >
+                    <span
+                      className="mt-vehicle-mark !h-11 !w-11"
+                      style={{
+                        color: selected
+                          ? "var(--mt-accent)"
+                          : "var(--mt-muted)",
+                      }}
+                    >
+                      <VehicleKindIcon
+                        id={option.id}
+                        className="!h-[1.35rem] !w-[1.35rem]"
+                      />
+                    </span>
+                    <span className="text-xs font-medium tracking-wide">
+                      {option.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
