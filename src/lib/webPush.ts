@@ -3,7 +3,11 @@ import webpush from "web-push";
 let configured = false;
 
 export function getVapidPublicKey() {
-  return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() || "";
+  return (
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() ||
+    process.env.VAPID_PUBLIC_KEY?.trim() ||
+    ""
+  );
 }
 
 export function configureWebPush() {
@@ -14,7 +18,9 @@ export function configureWebPush() {
     "mailto:kontakt@pasierb-webstudio.pl";
 
   if (!publicKey || !privateKey) {
-    throw new Error("Brak VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY w env");
+    throw new Error(
+      "Brak VAPID keys w env (NEXT_PUBLIC_VAPID_PUBLIC_KEY / VAPID_PUBLIC_KEY + VAPID_PRIVATE_KEY)"
+    );
   }
 
   if (!configured) {
