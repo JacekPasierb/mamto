@@ -90,6 +90,7 @@ export async function PUT(request: Request, context: RouteContext) {
             ? resolvedInterval
             : null,
         notes: notes?.trim() || "",
+        reminderDismissed: false,
       },
       {new: true}
     );

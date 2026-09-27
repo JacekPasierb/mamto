@@ -419,7 +419,10 @@ export async function GET() {
       }
     }
 
-    const personalVisits = (await PersonalVisit.find({userId}).lean()) as {
+    const personalVisits = (await PersonalVisit.find({
+      userId,
+      reminderDismissed: {$ne: true},
+    }).lean()) as {
       _id: unknown;
       name: string;
       type: VisitType;

@@ -2,12 +2,8 @@ import {auth} from "@clerk/nextjs/server";
 import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 
-import {parseCalendarDate, todayCalendarDate} from "@/lib/calculateCurrentStock";
-import {addMonths, enrichVisit} from "@/lib/visitHelpers";
-import {
-  VISIT_DEFAULT_INTERVAL_MONTHS,
-  type VisitType,
-} from "@/lib/visitTypes";
+import {todayCalendarDate} from "@/lib/calculateCurrentStock";
+import {enrichVisit} from "@/lib/visitHelpers";
 import {connectDB} from "@/lib/mongodb";
 import PersonalVisit from "@/models/PersonalVisit";
 
@@ -17,7 +13,7 @@ type RouteContext = {
   }>;
 };
 
-export async function POST(request: Request, context: RouteContext) {
+export async function POST(_request: Request, context: RouteContext) {
   try {
     const {userId} = await auth();
 
@@ -31,11 +27,6 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({message: "Nieprawidłowe ID"}, {status: 400});
     }
 
-    const body = await request.json().catch(() => ({}));
-    const completedAt = body.completedAt
-      ? parseCalendarDate(body.completedAt)
-      : todayCalendarDate();
-
     await connectDB();
 
     const existing = await PersonalVisit.findOne({_id: id, userId});
@@ -47,19 +38,16 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    const interval =
-      existing.intervalMonths && existing.intervalMonths > 0
-        ? existing.intervalMonths
-        : VISIT_DEFAULT_INTERVAL_MONTHS[existing.type as VisitType] || 6;
+    if (existing.reminderDismissed) {
+      return NextResponse.json(
+        enrichVisit(existing.toObject(), todayCalendarDate())
+      );
+    }
 
-    const nextDueAt = addMonths(completedAt, interval);
-
+    // Tylko schowaj „Po terminie” / powiadomienie — daty bez zmian.
     const visit = await PersonalVisit.findOneAndUpdate(
       {_id: id, userId},
-      {
-        lastVisitAt: completedAt,
-        nextDueAt,
-      },
+      {reminderDismissed: true},
       {new: true}
     );
 

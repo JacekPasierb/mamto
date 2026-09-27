@@ -24,6 +24,7 @@ export type VisitFormValues = {
   nextDueAt: string;
   intervalMonths: number | null;
   notes: string;
+  reminderDismissed?: boolean;
   daysUntilDue?: number;
   isOverdue?: boolean;
   isUrgent?: boolean;

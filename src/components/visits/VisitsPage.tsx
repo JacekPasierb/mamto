@@ -158,12 +158,6 @@ const VisitsPage = () => {
   };
 
   const handleComplete = async (item: VisitItem) => {
-    const confirmed = window.confirm(
-      `Oznaczyć „${item.name}” jako odbytą? Ustawimy kolejny termin według interwału.`
-    );
-
-    if (!confirmed) return;
-
     try {
       setCompletingId(item._id);
 
@@ -323,7 +317,7 @@ const VisitsPage = () => {
 
                     <p className="mt-2 text-sm text-[var(--mt-muted)]">
                       Następna: {formatDate(item.nextDueAt)}
-                      {item.daysUntilDue != null
+                      {!item.reminderDismissed && item.daysUntilDue != null
                         ? ` · ${formatDaysLeft(item.daysUntilDue)}`
                         : ""}
                     </p>
@@ -354,16 +348,18 @@ const VisitsPage = () => {
                   </div>
 
                   <div className="flex shrink-0 flex-wrap gap-4 self-start">
-                    <button
-                      type="button"
-                      onClick={() => handleComplete(item)}
-                      disabled={completingId === item._id}
-                      className="text-sm font-medium text-[var(--mt-ok)] underline-offset-4 transition hover:underline disabled:opacity-50"
-                    >
-                      {completingId === item._id
-                        ? "Zapisuję…"
-                        : "Odbyta wizyta"}
-                    </button>
+                    {!item.reminderDismissed ? (
+                      <button
+                        type="button"
+                        onClick={() => handleComplete(item)}
+                        disabled={completingId === item._id}
+                        className="text-sm font-medium text-[var(--mt-ink)] underline-offset-4 transition hover:text-[var(--mt-accent)] hover:underline disabled:opacity-50"
+                      >
+                        {completingId === item._id
+                          ? "Zapisuję…"
+                          : "Oznacz wykonane"}
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => openEditModal(item)}

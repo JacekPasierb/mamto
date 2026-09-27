@@ -13,6 +13,7 @@ export type VisitRecord = {
   nextDueAt: Date | string;
   intervalMonths?: number | null;
   notes?: string;
+  reminderDismissed?: boolean;
 };
 
 export type EnrichedVisit = VisitRecord & {
@@ -36,12 +37,13 @@ export function enrichVisit(
   asOf: Date = todayCalendarDate()
 ): EnrichedVisit {
   const days = daysUntilDue(item.nextDueAt, asOf);
+  const dismissed = Boolean(item.reminderDismissed);
 
   return {
     ...item,
     daysUntilDue: days,
-    isOverdue: days < 0,
-    isUrgent: days <= VISIT_URGENT_DAYS,
+    isOverdue: !dismissed && days < 0,
+    isUrgent: !dismissed && days <= VISIT_URGENT_DAYS,
   };
 }
 
