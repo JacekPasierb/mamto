@@ -72,6 +72,51 @@ const links: NavLink[] = [
   },
 ];
 
+const NavSkeleton = ({variant}: {variant: "rail" | "chip"}) => {
+  if (variant === "chip") {
+    return (
+      <>
+        {Array.from({length: 5}).map((_, index) => (
+          <div
+            key={index}
+            className="flex shrink-0 flex-col items-center gap-1.5 px-3 py-2"
+            aria-hidden
+          >
+            <span className="block size-5 animate-pulse rounded-sm bg-[var(--mt-line)]" />
+            <span className="block h-2.5 w-10 animate-pulse rounded-sm bg-[var(--mt-line)]" />
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <div className="space-y-1" aria-busy="true" aria-label="Ładowanie nawigacji">
+      {Array.from({length: 6}).map((_, index) => (
+        <div
+          key={index}
+          className="flex items-start gap-3 px-3 py-2.5"
+          aria-hidden
+        >
+          <span className="mt-0.5 flex w-7 shrink-0 justify-center">
+            <span className="block size-5 animate-pulse rounded-sm bg-[var(--mt-line)]" />
+          </span>
+          <span className="min-w-0 flex-1 space-y-2 pt-0.5">
+            <span
+              className="block h-3.5 animate-pulse rounded-sm bg-[var(--mt-line)]"
+              style={{width: `${58 + (index % 3) * 12}%`}}
+            />
+            <span
+              className="block h-2.5 animate-pulse rounded-sm bg-[var(--mt-line)]/70"
+              style={{width: `${42 + (index % 4) * 10}%`}}
+            />
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const DashboardSidebar = () => {
   const pathname = usePathname();
   const {modules, isLoading} = useSettings();
@@ -97,8 +142,14 @@ const DashboardSidebar = () => {
             }}
           />
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3">
-          {!isLoading &&
+        <nav
+          className="flex gap-1 overflow-x-auto px-3 pb-3"
+          aria-busy={isLoading || undefined}
+          aria-label="Nawigacja"
+        >
+          {isLoading ? (
+            <NavSkeleton variant="chip" />
+          ) : (
             visibleLinks.map((link) => {
               const isActive =
                 pathname === link.href ||
@@ -126,7 +177,8 @@ const DashboardSidebar = () => {
                   ) : null}
                 </Link>
               );
-            })}
+            })
+          )}
         </nav>
       </div>
 
@@ -152,11 +204,9 @@ const DashboardSidebar = () => {
             Nawigacja
           </p>
 
-          {isLoading && (
-            <p className="px-3 text-sm text-[var(--mt-muted)]">Ładowanie…</p>
-          )}
-
-          {!isLoading &&
+          {isLoading ? (
+            <NavSkeleton variant="rail" />
+          ) : (
             visibleLinks.map((link) => {
               const isActive =
                 pathname === link.href ||
@@ -186,7 +236,8 @@ const DashboardSidebar = () => {
                   </span>
                 </Link>
               );
-            })}
+            })
+          )}
         </nav>
 
         <div className="shrink-0 border-t border-[var(--mt-line)] px-6 py-4">
