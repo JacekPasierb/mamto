@@ -14,8 +14,8 @@ export default function PolitykaPrywatnosciPage() {
           Administratorem danych osobowych Użytkowników Usługi{" "}
           <strong>{LEGAL.appName}</strong> jest{" "}
           <strong>{LEGAL.operatorName}</strong>
-          {LEGAL.operatorForm ? ` (${LEGAL.operatorForm})` : ""}, adres:{" "}
-          {LEGAL.operatorAddress}
+          {LEGAL.operatorForm ? ` (${LEGAL.operatorForm})` : ""}
+          {LEGAL.operatorAddress ? `, adres: ${LEGAL.operatorAddress}` : ""}
           {LEGAL.operatorNip ? `, NIP: ${LEGAL.operatorNip}` : ""}. Kontakt w
           sprawach ochrony danych:{" "}
           <a href={`mailto:${LEGAL.operatorEmail}`}>{LEGAL.operatorEmail}</a>.

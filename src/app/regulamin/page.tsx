@@ -18,10 +18,9 @@ export default function RegulaminPage() {
         <p>
           Usługodawcą i administratorem Usługi jest{" "}
           <strong>{LEGAL.operatorName}</strong>
-          {LEGAL.operatorForm ? ` (${LEGAL.operatorForm})` : ""}, z siedzibą:{" "}
-          {LEGAL.operatorAddress}
-          {LEGAL.operatorNip ? `, NIP: ${LEGAL.operatorNip}` : ""}.
-          Kontakt:{" "}
+          {LEGAL.operatorForm ? ` (${LEGAL.operatorForm})` : ""}
+          {LEGAL.operatorAddress ? `, z siedzibą: ${LEGAL.operatorAddress}` : ""}
+          {LEGAL.operatorNip ? `, NIP: ${LEGAL.operatorNip}` : ""}. Kontakt:{" "}
           <a href={`mailto:${LEGAL.operatorEmail}`}>{LEGAL.operatorEmail}</a>
           {LEGAL.operatorPhone ? `, tel. ${LEGAL.operatorPhone}` : ""}.
         </p>

@@ -4,17 +4,17 @@
  */
 export const LEGAL = {
   appName: "MamTo",
-  siteUrl: "https://mamto.app",
-  effectiveDate: "15 sierpnia 2026 r.",
+  siteUrl: "https://mam-to.netlify.app",
+  effectiveDate: "27 września 2026 r.",
 
   /** Pełna nazwa administratora / usługodawcy */
-  operatorName: "[Nazwa firmy lub Imię i nazwisko]",
-  operatorForm: "[np. jednoosobowa działalność gospodarcza / sp. z o.o.]",
-  operatorAddress: "[ulica, kod, miasto, kraj]",
-  operatorNip: "[NIP]",
-  operatorKrs: "", // opcjonalnie
-  operatorEmail: "kontakt@mamto.app",
-  operatorPhone: "", // opcjonalnie
+  operatorName: "Jacek Pasierb",
+  operatorForm: "osoba fizyczna",
+  operatorAddress: "",
+  operatorNip: "",
+  operatorKrs: "",
+  operatorEmail: "kontakt@pasierb-webstudio.pl",
+  operatorPhone: "",
 
   /** Hosting / infrastruktura (do polityki prywatności) */
   processors: [
@@ -29,9 +29,9 @@ export const LEGAL = {
       region: "EOG lub inny region wskazany w panelu Atlas",
     },
     {
-      name: "Dostawca hostingu aplikacji (np. Vercel / inny)",
+      name: "Netlify, Inc.",
       role: "hosting frontendu i API",
-      region: "zgodnie z umową hostingu",
+      region: "zgodnie z umową Netlify",
     },
   ],
 } as const;
