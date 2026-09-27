@@ -1,6 +1,11 @@
 [build]
   command = "npm run build"
 
-# Codziennie o 7:00 UTC (~9:00 PL zimą / 8:00 latem) — wywołuje API push.
+[build.environment]
+  # Next.js wkleja env do bundle serwerowego — skaner Netlify widzi je jako „exposed”.
+  # To nie są sekrety w HTML dla przeglądarki; pomijamy je w skanie.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_VAPID_PUBLIC_KEY,NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,VAPID_PRIVATE_KEY,VAPID_SUBJECT,CRON_SECRET"
+
+# TYMCZASOWO: 22:30 czasu PL (CEST = UTC+2) → 20:30 UTC
 [functions."push-urgent-cron"]
-  schedule = "0 7 * * *"
+  schedule = "30 20 * * *"

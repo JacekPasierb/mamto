@@ -13,9 +13,7 @@ export function getVapidPublicKey() {
 export function configureWebPush() {
   const publicKey = getVapidPublicKey();
   const privateKey = process.env.VAPID_PRIVATE_KEY?.trim() || "";
-  const subject =
-    process.env.VAPID_SUBJECT?.trim() ||
-    "mailto:kontakt@pasierb-webstudio.pl";
+  const subject = process.env.VAPID_SUBJECT?.trim() || "mailto:admin@example.com";
 
   if (!publicKey || !privateKey) {
     throw new Error(
