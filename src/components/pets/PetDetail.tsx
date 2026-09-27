@@ -423,7 +423,7 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
                     {item.nextDueAt ? (
                       <p className="mt-2 text-sm text-[var(--mt-muted)]">
                         Następny: {formatDate(item.nextDueAt)}
-                        {item.daysUntilDue != null
+                        {!item.reminderDismissed && item.daysUntilDue != null
                           ? ` · ${formatDaysLeft(item.daysUntilDue)}`
                           : ""}
                       </p>
