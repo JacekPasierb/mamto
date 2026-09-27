@@ -14,6 +14,7 @@ export const PET_CARE_TYPES = [
   "deworming",
   "tick",
   "flea",
+  "flea_tick",
   "vet_checkup",
   "other",
 ] as const;
@@ -30,6 +31,7 @@ export const PET_CARE_TYPE_LABELS: Record<PetCareType, string> = {
   deworming: "Odrobaczanie",
   tick: "Kleszcze",
   flea: "Pchły",
+  flea_tick: "Pchły i kleszcze",
   vet_checkup: "Kontrola u weta",
   other: "Inne",
 };
@@ -38,8 +40,9 @@ export const PET_CARE_TYPE_HINTS: Record<PetCareType, string> = {
   rabies: "Szczepienie przeciw wściekliźnie",
   infectious: "Szczepienie przeciw chorobom zakaźnym",
   deworming: "Preparat odrobaczający",
-  tick: "Tabletki / obroża / krople na kleszcze",
-  flea: "Preparat przeciw pchłom",
+  tick: "Tabletki / obroża / krople tylko na kleszcze",
+  flea: "Preparat tylko przeciw pchłom",
+  flea_tick: "Jeden preparat na pchły i kleszcze (np. Vectra 3D)",
   vet_checkup: "Badanie kontrolne, przegląd zdrowia",
   other: "Inna opieka lub zabieg",
 };
@@ -53,6 +56,11 @@ export const PET_CARE_NAME_SUGGESTIONS: Record<PetCareType, string[]> = {
   deworming: ["Odrobaczanie", "Tabletka odrobaczająca"],
   tick: ["Tabletka na kleszcze", "Obroża na kleszcze", "Krople na kleszcze"],
   flea: ["Preparat przeciw pchłom", "Krople przeciw pchłom"],
+  flea_tick: [
+    "Vectra 3D",
+    "Tabletka na pchły i kleszcze",
+    "Krople na pchły i kleszcze",
+  ],
   vet_checkup: ["Kontrola u weterynarza", "Badania krwi"],
   other: ["Inny zabieg", "Pielęgnacja"],
 };
@@ -63,6 +71,7 @@ export const PET_CARE_DEFAULT_INTERVAL_MONTHS: Record<PetCareType, number> = {
   deworming: 3,
   tick: 1,
   flea: 1,
+  flea_tick: 1,
   vet_checkup: 12,
   other: 6,
 };

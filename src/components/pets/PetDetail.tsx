@@ -120,6 +120,7 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
       deworming: 0,
       tick: 0,
       flea: 0,
+      flea_tick: 0,
       vet_checkup: 0,
       other: 0,
     };
