@@ -56,6 +56,13 @@ const PetCareFormModal = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const computeNextDue = (doneAt: string, monthsStr: string) => {
+    const months = Number(monthsStr);
+    if (!Number.isFinite(months) || months <= 0) return null;
+    const base = doneAt || toDateInputValue(new Date());
+    return toDateInputValue(addMonths(base, months));
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -90,28 +97,31 @@ const PetCareFormModal = ({
 
   if (!isOpen) return null;
 
+  const applyNextDue = (doneAt: string, monthsStr: string) => {
+    const next = computeNextDue(doneAt, monthsStr);
+    if (next) setNextDueAt(next);
+  };
+
   const handleTypeChange = (next: PetCareFormType) => {
     setType(next);
     const months = PET_CARE_DEFAULT_INTERVAL_MONTHS[next];
     setIntervalMonths(String(months));
 
-    if (!isEditing) {
-      if (!name.trim() || PET_CARE_NAME_SUGGESTIONS[type].includes(name)) {
-        setName(PET_CARE_NAME_SUGGESTIONS[next][0] || "");
-      }
-
-      const base = lastDoneAt || toDateInputValue(new Date());
-      setNextDueAt(toDateInputValue(addMonths(base, months)));
+    if (!name.trim() || PET_CARE_NAME_SUGGESTIONS[type].includes(name)) {
+      setName(PET_CARE_NAME_SUGGESTIONS[next][0] || "");
     }
+
+    applyNextDue(lastDoneAt, String(months));
   };
 
-  const handleIntervalBlur = () => {
-    const months = Number(intervalMonths);
-    if (!Number.isFinite(months) || months <= 0) return;
-    if (isEditing && nextDueAt) return;
+  const handleLastDoneChange = (value: string) => {
+    setLastDoneAt(value);
+    applyNextDue(value, intervalMonths);
+  };
 
-    const base = lastDoneAt || toDateInputValue(new Date());
-    setNextDueAt(toDateInputValue(addMonths(base, months)));
+  const handleIntervalChange = (value: string) => {
+    setIntervalMonths(value);
+    applyNextDue(lastDoneAt, value);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -263,7 +273,7 @@ const PetCareFormModal = ({
               <input
                 type="date"
                 value={lastDoneAt}
-                onChange={(e) => setLastDoneAt(e.target.value)}
+                onChange={(e) => handleLastDoneChange(e.target.value)}
                 className={fieldClass}
               />
             </div>
@@ -275,8 +285,7 @@ const PetCareFormModal = ({
                 type="number"
                 min="1"
                 value={intervalMonths}
-                onChange={(e) => setIntervalMonths(e.target.value)}
-                onBlur={handleIntervalBlur}
+                onChange={(e) => handleIntervalChange(e.target.value)}
                 className={fieldClass}
               />
             </div>
@@ -293,6 +302,9 @@ const PetCareFormModal = ({
               required
               className={fieldClass}
             />
+            <p className="mt-2 text-xs text-[var(--mt-muted)]">
+              Liczony z daty zabiegu + interwału — możesz poprawić ręcznie.
+            </p>
           </div>
 
           <div>
