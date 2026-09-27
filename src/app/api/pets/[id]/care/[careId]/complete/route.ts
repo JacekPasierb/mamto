@@ -2,7 +2,7 @@ import {auth} from "@clerk/nextjs/server";
 import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 
-import {parseCalendarDate, todayCalendarDate} from "@/lib/calculateCurrentStock";
+import {todayCalendarDate} from "@/lib/calculateCurrentStock";
 import {enrichPetCare} from "@/lib/petHelpers";
 import {connectDB} from "@/lib/mongodb";
 import PetCare from "@/models/PetCare";
@@ -11,7 +11,7 @@ type RouteContext = {
   params: Promise<{id: string; careId: string}>;
 };
 
-export async function POST(request: Request, context: RouteContext) {
+export async function POST(_request: Request, context: RouteContext) {
   try {
     const {userId} = await auth();
 
@@ -27,11 +27,6 @@ export async function POST(request: Request, context: RouteContext) {
     ) {
       return NextResponse.json({message: "Nieprawidłowe ID"}, {status: 400});
     }
-
-    const body = await request.json().catch(() => ({}));
-    const completedAt = body.completedAt
-      ? parseCalendarDate(body.completedAt)
-      : todayCalendarDate();
 
     await connectDB();
 
@@ -55,13 +50,10 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    // Tylko wyłącz termin / powiadomienie — kolejne szczepienie użytkownik doda sam.
+    // Tylko wyłącz termin / powiadomienie — bez zmiany dat.
     const item = await PetCare.findOneAndUpdate(
       {_id: careId, petId: id, userId},
-      {
-        lastDoneAt: completedAt,
-        nextDueAt: null,
-      },
+      {nextDueAt: null},
       {new: true}
     );
 

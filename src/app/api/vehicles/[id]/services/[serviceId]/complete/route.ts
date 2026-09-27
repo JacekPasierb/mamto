@@ -2,7 +2,6 @@ import {auth} from "@clerk/nextjs/server";
 import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 
-import {parseCalendarDate, todayCalendarDate} from "@/lib/calculateCurrentStock";
 import {connectDB} from "@/lib/mongodb";
 import Vehicle from "@/models/Vehicle";
 import VehicleService from "@/models/VehicleService";
@@ -14,7 +13,7 @@ type RouteContext = {
   }>;
 };
 
-export async function POST(request: Request, context: RouteContext) {
+export async function POST(_request: Request, context: RouteContext) {
   try {
     const {userId} = await auth();
 
@@ -31,14 +30,9 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({message: "Nieprawidłowe ID"}, {status: 400});
     }
 
-    const body = await request.json().catch(() => ({}));
-    const completedAt = body.completedAt
-      ? parseCalendarDate(body.completedAt)
-      : todayCalendarDate();
-
     await connectDB();
 
-    const vehicle = await Vehicle.findOne({_id: id, userId});
+    const vehicle = await Vehicle.findOne({_id: id, userId}).lean();
 
     if (!vehicle) {
       return NextResponse.json(
@@ -67,27 +61,15 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    const serviceMileage =
-      body.mileage !== "" && body.mileage != null
-        ? Number(body.mileage)
-        : Number(existing.mileage) || Number(vehicle.mileage) || 0;
-
-    // Tylko wyłącz termin / powiadomienie — kolejny serwis użytkownik doda sam.
+    // Tylko wyłącz termin / powiadomienie — bez zmiany daty wykonania.
     const service = await VehicleService.findOneAndUpdate(
       {_id: serviceId, vehicleId: id, userId},
       {
-        performedAt: completedAt,
-        mileage: serviceMileage,
         nextDueAt: null,
         nextDueMileage: null,
       },
       {new: true}
     );
-
-    if (serviceMileage > vehicle.mileage) {
-      vehicle.mileage = serviceMileage;
-      await vehicle.save();
-    }
 
     return NextResponse.json(service);
   } catch (error) {

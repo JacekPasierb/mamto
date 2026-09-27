@@ -292,7 +292,7 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
         {
           method: "POST",
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({mileage}),
+          body: JSON.stringify({}),
         }
       );
 
