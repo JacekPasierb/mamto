@@ -7,6 +7,7 @@ export type Modules = {
   insurance: boolean;
   documents: boolean;
   beauty: boolean;
+  pets: boolean;
   stock: boolean;
 };
 

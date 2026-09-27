@@ -9,6 +9,7 @@ const DEFAULT_MODULES = {
   insurance: true,
   documents: true,
   beauty: true,
+  pets: true,
   stock: true,
 };
 
@@ -18,6 +19,7 @@ function normalizeModules(modules?: Partial<typeof DEFAULT_MODULES> | null) {
     insurance: modules?.insurance ?? DEFAULT_MODULES.insurance,
     documents: modules?.documents ?? DEFAULT_MODULES.documents,
     beauty: modules?.beauty ?? DEFAULT_MODULES.beauty,
+    pets: modules?.pets ?? DEFAULT_MODULES.pets,
     stock: modules?.stock ?? DEFAULT_MODULES.stock,
   };
 }
@@ -48,6 +50,10 @@ export async function GET() {
 
       if (settings.modules?.beauty === undefined) {
         moduleFixes["modules.beauty"] = true;
+      }
+
+      if (settings.modules?.pets === undefined) {
+        moduleFixes["modules.pets"] = true;
       }
 
       if (Object.keys(moduleFixes).length > 0) {

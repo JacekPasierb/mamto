@@ -46,6 +46,13 @@ const domains: {
     line: "Lekarze, stomatolodzy, fryzjer, paznokcie — systematycznie.",
     icon: "visits",
   },
+  {
+    key: "pets",
+    href: "/pets",
+    title: "Zwierzęta",
+    line: "Szczepienia, odrobaczanie, kleszcze i pchły.",
+    icon: "pets",
+  },
 ];
 
 const LifeDomains = () => {

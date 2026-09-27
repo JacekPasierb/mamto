@@ -188,6 +188,45 @@ export const IconMileage = ({className, ...props}: GlyphProps) => (
   </svg>
 );
 
+/** Najbliższe — tor terminu ze znacznikiem nadchodzącego serwisu. */
+export const IconNearest = ({className, ...props}: GlyphProps) => (
+  <svg
+    viewBox="0 0 40 40"
+    fill="none"
+    className={shell(className)}
+    aria-hidden
+    {...props}
+  >
+    <path
+      d="M6 28.5c4.2-9.5 10.2-14.5 14-14.5s9.8 5 14 14.5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="square"
+    />
+    <path
+      d="M10.2 22.5h2.4M18.8 15.2h2.4M27.4 22.5h2.4"
+      stroke="currentColor"
+      strokeWidth="1.35"
+      strokeLinecap="square"
+      opacity="0.45"
+    />
+    <path
+      d="M6 28.5h28"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="square"
+      opacity="0.35"
+    />
+    <circle
+      className="mt-icon-accent"
+      cx="27.5"
+      cy="18.2"
+      r="2.1"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 /** Serwis — wszystko / hub czynności. */
 export const IconServiceAll = ({className, ...props}: GlyphProps) => (
   <svg
@@ -304,6 +343,7 @@ export const IconInspections = ({className, ...props}: GlyphProps) => (
 export type VehicleKindIconId = "car" | "motorcycle" | "other";
 export type VehicleServiceIconId =
   | "all"
+  | "nearest"
   | "maintenance"
   | "repairs"
   | "inspections";
@@ -323,6 +363,7 @@ export const VehicleServiceIcon = ({
   className,
   ...props
 }: GlyphProps & {id: VehicleServiceIconId}) => {
+  if (id === "nearest") return <IconNearest className={className} {...props} />;
   if (id === "maintenance") return <IconMaintenance className={className} {...props} />;
   if (id === "repairs") return <IconRepairs className={className} {...props} />;
   if (id === "inspections") return <IconInspections className={className} {...props} />;

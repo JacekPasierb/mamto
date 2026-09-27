@@ -51,6 +51,13 @@ const links: NavLink[] = [
     moduleKey: "beauty",
   },
   {
+    href: "/pets",
+    label: "Zwierzęta",
+    hint: "Szczepienia, kleszcze, pchły",
+    icon: "pets",
+    moduleKey: "pets",
+  },
+  {
     href: "/stock",
     label: "Zapasy",
     hint: "Leki zanim się skończą",

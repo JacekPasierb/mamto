@@ -9,9 +9,16 @@ import DocumentFormModal from "@/components/documents/DocumentFormModal";
 import StockFormModal from "@/components/stock/StockFormModal";
 import VehicleFormModal from "@/components/vehicles/VehicleFormModal";
 import VisitFormModal from "@/components/visits/VisitFormModal";
+import PetFormModal from "@/components/pets/PetFormModal";
 import {useSettings, type Modules} from "@/context/SettingsContext";
 
-type QuickKind = "vehicle" | "insurance" | "documents" | "visit" | "stock";
+type QuickKind =
+  | "vehicle"
+  | "insurance"
+  | "documents"
+  | "visit"
+  | "pet"
+  | "stock";
 
 type QuickOption = {
   kind: QuickKind;
@@ -49,6 +56,13 @@ const OPTIONS: QuickOption[] = [
     hint: "Lekarz, fryzjer, paznokcie…",
     icon: "visits",
     moduleKey: "beauty",
+  },
+  {
+    kind: "pet",
+    label: "Zwierzę",
+    hint: "Pies, kot — szczepienia i opieka",
+    icon: "pets",
+    moduleKey: "pets",
   },
   {
     kind: "stock",
@@ -166,6 +180,12 @@ const QuickAddModal = ({isOpen, onClose, onSaved}: QuickAddModalProps) => {
   if (step === "visit") {
     return (
       <VisitFormModal isOpen onClose={handleFormClose} onSaved={handleSaved} />
+    );
+  }
+
+  if (step === "pet") {
+    return (
+      <PetFormModal isOpen onClose={handleFormClose} onSaved={handleSaved} />
     );
   }
 

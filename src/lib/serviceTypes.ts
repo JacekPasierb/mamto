@@ -183,6 +183,12 @@ export function getServiceInterval(
   return SERVICE_INTERVALS[type];
 }
 
+/** Okna przypomnień serwisowych (data / przebieg). */
+export const SERVICE_URGENT_DAYS = 14;
+export const SERVICE_UPCOMING_DAYS = 60;
+export const SERVICE_URGENT_KM = 500;
+export const SERVICE_UPCOMING_KM = 2000;
+
 export const SERVICE_GROUPS = [
   "maintenance",
   "repairs",

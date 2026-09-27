@@ -295,12 +295,44 @@ export const IconDocuments = ({active, className, ...props}: GlyphProps) => (
   </svg>
 );
 
+/** Zwierzęta — sylwetka pupila ze znacznikiem opieki. */
+export const IconPets = ({active, className, ...props}: GlyphProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    className={base(active, className)}
+    aria-hidden
+    {...props}
+  >
+    <ellipse
+      cx="12"
+      cy="14.5"
+      rx="6.2"
+      ry="4.6"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
+    <circle cx="8.2" cy="8.2" r="1.7" stroke="currentColor" strokeWidth="1.4" />
+    <circle cx="15.8" cy="8.2" r="1.7" stroke="currentColor" strokeWidth="1.4" />
+    <circle cx="5.8" cy="11.2" r="1.45" stroke="currentColor" strokeWidth="1.35" />
+    <circle cx="18.2" cy="11.2" r="1.45" stroke="currentColor" strokeWidth="1.35" />
+    <circle
+      className="mt-icon-accent"
+      cx="12"
+      cy="14.2"
+      r="1.5"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 export type NavIconId =
   | "dashboard"
   | "vehicles"
   | "insurance"
   | "documents"
   | "visits"
+  | "pets"
   | "stock"
   | "settings";
 
@@ -310,6 +342,7 @@ const map = {
   insurance: IconInsurance,
   documents: IconDocuments,
   visits: IconVisits,
+  pets: IconPets,
   stock: IconStock,
   settings: IconSettings,
 } as const;

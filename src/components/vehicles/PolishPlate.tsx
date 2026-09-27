@@ -26,28 +26,40 @@ export function formatPolishPlate(raw: string): string {
   return cleaned.replace(/(.{2,3})(.+)/, "$1 $2");
 }
 
-function EuStars({className}: {className?: string}) {
-  const stars = Array.from({length: 12}, (_, i) => {
-    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
-    const cx = 50 + Math.cos(angle) * 34;
-    const cy = 50 + Math.sin(angle) * 34;
-    return (
-      <polygon
-        key={i}
-        points="50,8 54.5,20 67,20 57,28 60.5,40 50,32.5 39.5,40 43,28 33,20 45.5,20"
-        fill="#FFCC00"
-        transform={`translate(${cx - 50} ${cy - 50}) scale(0.22)`}
-      />
-    );
-  });
+/** Stałe pozycje gwiazd UE (bez Math.* w renderze — unika mismatch SSR/klient). */
+const EU_STAR_TRANSFORMS = [
+  "translate(0 -34) scale(0.22)",
+  "translate(17 -29.445) scale(0.22)",
+  "translate(29.445 -17) scale(0.22)",
+  "translate(34 0) scale(0.22)",
+  "translate(29.445 17) scale(0.22)",
+  "translate(17 29.445) scale(0.22)",
+  "translate(0 34) scale(0.22)",
+  "translate(-17 29.445) scale(0.22)",
+  "translate(-29.445 17) scale(0.22)",
+  "translate(-34 0) scale(0.22)",
+  "translate(-29.445 -17) scale(0.22)",
+  "translate(-17 -29.445) scale(0.22)",
+] as const;
 
+const EU_STAR_POINTS =
+  "50,8 54.5,20 67,20 57,28 60.5,40 50,32.5 39.5,40 43,28 33,20 45.5,20";
+
+function EuStars({className}: {className?: string}) {
   return (
     <svg
       viewBox="0 0 100 100"
       className={className}
       aria-hidden
     >
-      {stars}
+      {EU_STAR_TRANSFORMS.map((transform, i) => (
+        <polygon
+          key={i}
+          points={EU_STAR_POINTS}
+          fill="#FFCC00"
+          transform={transform}
+        />
+      ))}
     </svg>
   );
 }

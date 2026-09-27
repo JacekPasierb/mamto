@@ -39,6 +39,13 @@ const moduleRows: {
     icon: "visits",
   },
   {
+    key: "pets",
+    title: "Zwierzęta",
+    description:
+      "Szczepienia, odrobaczanie, kleszcze, pchły i kontrole u weterynarza.",
+    icon: "pets",
+  },
+  {
     key: "stock",
     title: "Zapasy",
     description: "Leki, soczewki i inne rzeczy, które mogą się kończyć.",

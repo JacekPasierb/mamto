@@ -44,7 +44,7 @@ type VehicleServiceItem = ServiceFormValues & {
   type: ServiceType;
 };
 
-type ServiceTab = "all" | ServiceGroup;
+type ServiceTab = "all" | "nearest" | ServiceGroup;
 
 type VehicleDetailProps = {
   vehicle: VehicleDetailData;
@@ -77,6 +77,48 @@ const isServiceOverdue = (service: VehicleServiceItem, currentMileage: number) =
   }
 
   return false;
+};
+
+/** Wszystkie wpisy z terminem, od najbliższej daty (potem przebieg). */
+const getNearestServices = (
+  services: VehicleServiceItem[],
+  currentMileage: number
+) => {
+  const withDue = services.filter(
+    (service) => service.nextDueAt || service.nextDueMileage != null
+  );
+
+  return [...withDue].sort((a, b) => {
+    const aHasDate = Boolean(a.nextDueAt);
+    const bHasDate = Boolean(b.nextDueAt);
+
+    if (aHasDate && bHasDate) {
+      return (
+        new Date(a.nextDueAt!).getTime() - new Date(b.nextDueAt!).getTime()
+      );
+    }
+
+    if (aHasDate !== bHasDate) {
+      return aHasDate ? -1 : 1;
+    }
+
+    const aKm =
+      a.nextDueMileage != null
+        ? a.nextDueMileage - currentMileage
+        : Number.POSITIVE_INFINITY;
+    const bKm =
+      b.nextDueMileage != null
+        ? b.nextDueMileage - currentMileage
+        : Number.POSITIVE_INFINITY;
+
+    return aKm - bKm;
+  });
+};
+
+const tabLabel = (tab: ServiceTab) => {
+  if (tab === "all") return "Wszystko";
+  if (tab === "nearest") return "Najbliższe";
+  return SERVICE_GROUP_LABELS[tab];
 };
 
 const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
@@ -134,9 +176,15 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
     };
   }, [loadServices]);
 
+  const nearestServices = useMemo(
+    () => getNearestServices(services, mileage),
+    [services, mileage]
+  );
+
   const counts = useMemo(() => {
     const result: Record<ServiceTab, number> = {
       all: services.length,
+      nearest: nearestServices.length,
       maintenance: 0,
       repairs: 0,
       inspections: 0,
@@ -147,14 +195,15 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
     }
 
     return result;
-  }, [services]);
+  }, [services, nearestServices]);
 
   const filteredServices = useMemo(() => {
     if (activeTab === "all") return services;
+    if (activeTab === "nearest") return nearestServices;
     return services.filter((service) =>
       SERVICE_GROUP_TYPES[activeTab].includes(service.type)
     );
-  }, [services, activeTab]);
+  }, [services, activeTab, nearestServices]);
 
   const totalPages = Math.max(
     1,
@@ -175,6 +224,7 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
 
   const tabs: {id: ServiceTab; label: string}[] = [
     {id: "all", label: "Wszystko"},
+    {id: "nearest", label: "Najbliższe"},
     ...SERVICE_GROUPS.map((group) => ({
       id: group as ServiceTab,
       label: SERVICE_GROUP_LABELS[group],
@@ -423,13 +473,15 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const iconId: VehicleServiceIconId =
-              tab.id === "maintenance"
-                ? "maintenance"
-                : tab.id === "repairs"
-                  ? "repairs"
-                  : tab.id === "inspections"
-                    ? "inspections"
-                    : "all";
+              tab.id === "nearest"
+                ? "nearest"
+                : tab.id === "maintenance"
+                  ? "maintenance"
+                  : tab.id === "repairs"
+                    ? "repairs"
+                    : tab.id === "inspections"
+                      ? "inspections"
+                      : "all";
 
             return (
               <button
@@ -479,11 +531,10 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
         ) : filteredServices.length === 0 ? (
           <div className="mt-6 border border-dashed border-[var(--mt-line)] bg-white/40 px-6 py-14 text-center">
             <p className="text-sm text-[var(--mt-muted)]">
-              Brak wpisów w kategorii „
-              {activeTab === "all"
-                ? "Wszystko"
-                : SERVICE_GROUP_LABELS[activeTab]}
-              ”.
+              Brak wpisów w kategorii „{tabLabel(activeTab)}”.
+              {activeTab === "nearest"
+                ? " Tu pojawią się serwisy z ustawionym następnym terminem."
+                : ""}
             </p>
           </div>
         ) : (

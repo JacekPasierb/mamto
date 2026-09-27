@@ -19,7 +19,7 @@ import {
   normalizeInsuranceType,
   type InsuranceType,
 } from "@/lib/insuranceTypes";
-import {SERVICE_TYPE_LABELS, getServiceInterval, type ServiceType, type VehicleKind} from "@/lib/serviceTypes";
+import {SERVICE_TYPE_LABELS, SERVICE_UPCOMING_DAYS, SERVICE_UPCOMING_KM, SERVICE_URGENT_DAYS, SERVICE_URGENT_KM, getServiceInterval, type ServiceType, type VehicleKind} from "@/lib/serviceTypes";
 import {enrichStockItem} from "@/lib/stockHelpers";
 import {STOCK_CATEGORY_LABELS, type StockCategory} from "@/lib/stockTypes";
 import {enrichVisit} from "@/lib/visitHelpers";
@@ -30,17 +30,27 @@ import {
   normalizeVisitType,
   type VisitType,
 } from "@/lib/visitTypes";
+import {enrichPetCare} from "@/lib/petHelpers";
+import {
+  PET_CARE_TYPE_LABELS,
+  PET_CARE_UPCOMING_DAYS,
+  PET_CARE_URGENT_DAYS,
+  normalizePetCareType,
+  type PetCareType,
+} from "@/lib/petTypes";
 import InsurancePolicy from "@/models/InsurancePolicy";
 import PersonalDocument from "@/models/PersonalDocument";
 import PersonalVisit from "@/models/PersonalVisit";
+import Pet from "@/models/Pet";
+import PetCare from "@/models/PetCare";
 import StockItem from "@/models/StockItem";
 import Vehicle from "@/models/Vehicle";
 import VehicleService from "@/models/VehicleService";
 
-const URGENT_DAYS = 14;
-const UPCOMING_DAYS = 60;
-const URGENT_KM = 500;
-const UPCOMING_KM = 2000;
+const URGENT_DAYS = SERVICE_URGENT_DAYS;
+const UPCOMING_DAYS = SERVICE_UPCOMING_DAYS;
+const URGENT_KM = SERVICE_URGENT_KM;
+const UPCOMING_KM = SERVICE_UPCOMING_KM;
 
 export const dynamic = "force-dynamic";
 
@@ -439,6 +449,61 @@ export async function GET() {
         href: "/visits",
         reason,
         tone: days <= VISIT_URGENT_DAYS ? "urgent" : "upcoming",
+        sortKey: days,
+        overdue: days < 0,
+      };
+
+      if (item.tone === "urgent") {
+        urgent.push(item);
+      } else {
+        upcoming.push(item);
+      }
+    }
+
+    const pets = (await Pet.find({userId}).lean()) as {
+      _id: unknown;
+      name: string;
+    }[];
+    const petNameById = new Map(
+      pets.map((pet) => [String(pet._id), pet.name])
+    );
+
+    const petCareItems = (await PetCare.find({userId}).lean()) as {
+      _id: unknown;
+      petId: unknown;
+      name: string;
+      type: PetCareType;
+      providerName?: string;
+      nextDueAt: Date;
+    }[];
+
+    for (const care of petCareItems) {
+      const enriched = enrichPetCare(care, now);
+      const days = enriched.daysUntilDue;
+
+      if (days > PET_CARE_UPCOMING_DAYS) continue;
+
+      const petName = petNameById.get(String(care.petId)) || "Zwierzę";
+      const reason =
+        days < 0
+          ? `po terminie o ${Math.abs(days)} dni`
+          : days === 0
+            ? "termin dziś"
+            : `za ${days} dni`;
+
+      const item: ReminderItem = {
+        id: `pet-care-${String(care._id)}`,
+        title: care.name,
+        subtitle: [
+          petName,
+          PET_CARE_TYPE_LABELS[normalizePetCareType(care.type)],
+          care.providerName || null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        href: `/pets/${String(care.petId)}`,
+        reason,
+        tone: days <= PET_CARE_URGENT_DAYS ? "urgent" : "upcoming",
         sortKey: days,
         overdue: days < 0,
       };

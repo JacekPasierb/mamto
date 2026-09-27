@@ -25,6 +25,10 @@ const UserSettingsSchema = new Schema(
         type: Boolean,
         default: true,
       },
+      pets: {
+        type: Boolean,
+        default: true,
+      },
       stock: {
         type: Boolean,
         default: true,
