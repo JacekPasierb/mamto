@@ -52,6 +52,13 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
+    if (!existing.nextDueAt) {
+      return NextResponse.json(
+        {message: "Ten wpis jest już zamknięty"},
+        {status: 400}
+      );
+    }
+
     const interval =
       existing.intervalMonths && existing.intervalMonths > 0
         ? existing.intervalMonths
@@ -59,18 +66,36 @@ export async function POST(request: Request, context: RouteContext) {
 
     const nextDueAt = addMonths(completedAt, interval);
 
-    const item = await PetCare.findOneAndUpdate(
+    // Zamknij bieżący wpis jako wykonany (zostaje w liście jako historia).
+    const closed = await PetCare.findOneAndUpdate(
       {_id: careId, petId: id, userId},
       {
         lastDoneAt: completedAt,
-        nextDueAt,
+        nextDueAt: null,
       },
       {new: true}
     );
 
-    return NextResponse.json(
-      enrichPetCare(item!.toObject(), todayCalendarDate())
-    );
+    // Dodaj kolejny wpis z nowym terminem do pilnowania.
+    const next = await PetCare.create({
+      userId,
+      petId: id,
+      name: existing.name,
+      type: existing.type,
+      diseases: existing.diseases || [],
+      providerName: existing.providerName || "",
+      lastDoneAt: completedAt,
+      nextDueAt,
+      intervalMonths: existing.intervalMonths,
+      notes: existing.notes || "",
+    });
+
+    const now = todayCalendarDate();
+
+    return NextResponse.json({
+      closed: enrichPetCare(closed!.toObject(), now),
+      next: enrichPetCare(next.toObject(), now),
+    });
   } catch (error) {
     console.error("POST complete pet care error:", error);
 

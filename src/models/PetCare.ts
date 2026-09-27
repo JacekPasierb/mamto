@@ -52,9 +52,10 @@ const PetCareSchema = new Schema(
       default: null,
     },
 
+    /** null = wpis historyczny (wykonany), bez kolejnego terminu. */
     nextDueAt: {
       type: Date,
-      required: true,
+      default: null,
       index: true,
     },
 

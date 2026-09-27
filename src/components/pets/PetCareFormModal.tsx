@@ -27,12 +27,13 @@ export type PetCareFormValues = {
   diseases?: InfectiousDisease[];
   providerName: string;
   lastDoneAt: string | null;
-  nextDueAt: string;
+  nextDueAt: string | null;
   intervalMonths: number | null;
   notes: string;
-  daysUntilDue?: number;
+  daysUntilDue?: number | null;
   isOverdue?: boolean;
   isUrgent?: boolean;
+  isActive?: boolean;
 };
 
 type PetCareFormModalProps = {

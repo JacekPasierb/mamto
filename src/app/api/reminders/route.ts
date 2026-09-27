@@ -471,7 +471,10 @@ export async function GET() {
       pets.map((pet) => [String(pet._id), pet.name])
     );
 
-    const petCareItems = (await PetCare.find({userId}).lean()) as {
+    const petCareItems = (await PetCare.find({
+      userId,
+      nextDueAt: {$ne: null},
+    }).lean()) as {
       _id: unknown;
       petId: unknown;
       name: string;
@@ -485,7 +488,7 @@ export async function GET() {
       const enriched = enrichPetCare(care, now);
       const days = enriched.daysUntilDue;
 
-      if (days > PET_CARE_UPCOMING_DAYS) continue;
+      if (days == null || days > PET_CARE_UPCOMING_DAYS) continue;
 
       const petName = petNameById.get(String(care.petId)) || "Zwierzę";
       const reason =

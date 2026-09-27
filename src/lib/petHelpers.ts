@@ -16,15 +16,16 @@ export type PetCareRecord = {
   diseases?: InfectiousDisease[];
   providerName?: string;
   lastDoneAt?: Date | string | null;
-  nextDueAt: Date | string;
+  nextDueAt?: Date | string | null;
   intervalMonths?: number | null;
   notes?: string;
 };
 
 export type EnrichedPetCare = PetCareRecord & {
-  daysUntilDue: number;
+  daysUntilDue: number | null;
   isOverdue: boolean;
   isUrgent: boolean;
+  isActive: boolean;
 };
 
 export function daysUntilDue(
@@ -41,6 +42,16 @@ export function enrichPetCare(
   item: PetCareRecord,
   asOf: Date = todayCalendarDate()
 ): EnrichedPetCare {
+  if (!item.nextDueAt) {
+    return {
+      ...item,
+      daysUntilDue: null,
+      isOverdue: false,
+      isUrgent: false,
+      isActive: false,
+    };
+  }
+
   const days = daysUntilDue(item.nextDueAt, asOf);
 
   return {
@@ -48,6 +59,7 @@ export function enrichPetCare(
     daysUntilDue: days,
     isOverdue: days < 0,
     isUrgent: days <= PET_CARE_URGENT_DAYS,
+    isActive: true,
   };
 }
 

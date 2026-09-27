@@ -132,11 +132,31 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
   }, [items]);
 
   const filteredItems = useMemo(() => {
-    if (activeTab === "all") return items;
-    if (activeTab === "urgent") return items.filter((item) => item.isUrgent);
-    return items.filter(
-      (item) => normalizePetCareType(item.type) === activeTab
-    );
+    let list =
+      activeTab === "all"
+        ? items
+        : activeTab === "urgent"
+          ? items.filter((item) => item.isUrgent)
+          : items.filter(
+              (item) => normalizePetCareType(item.type) === activeTab
+            );
+
+    return [...list].sort((a, b) => {
+      const aActive = Boolean(a.nextDueAt);
+      const bActive = Boolean(b.nextDueAt);
+
+      if (aActive && bActive) {
+        return (
+          new Date(a.nextDueAt!).getTime() - new Date(b.nextDueAt!).getTime()
+        );
+      }
+
+      if (aActive !== bActive) return aActive ? -1 : 1;
+
+      const aDone = a.lastDoneAt ? new Date(a.lastDoneAt).getTime() : 0;
+      const bDone = b.lastDoneAt ? new Date(b.lastDoneAt).getTime() : 0;
+      return bDone - aDone;
+    });
   }, [items, activeTab]);
 
   const totalPages = Math.max(
@@ -161,7 +181,7 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
 
   const handleComplete = async (item: PetCareFormValues) => {
     const confirmed = window.confirm(
-      `Oznaczyć „${item.name}” jako wykonane? Ustawimy kolejny termin według interwału.`
+      `Oznaczyć „${item.name}” jako wykonane? Obecny wpis zostanie w historii, a dodamy kolejny z nowym terminem.`
     );
     if (!confirmed) return;
 
@@ -405,12 +425,21 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
                       </div>
                     ) : null}
 
-                    <p className="mt-2 text-sm text-[var(--mt-muted)]">
-                      Następny: {formatDate(item.nextDueAt)}
-                      {item.daysUntilDue != null
-                        ? ` · ${formatDaysLeft(item.daysUntilDue)}`
-                        : ""}
-                    </p>
+                    {item.nextDueAt ? (
+                      <p className="mt-2 text-sm text-[var(--mt-muted)]">
+                        Następny: {formatDate(item.nextDueAt)}
+                        {item.daysUntilDue != null
+                          ? ` · ${formatDaysLeft(item.daysUntilDue)}`
+                          : ""}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-sm text-[var(--mt-muted)]">
+                        Wykonane
+                        {item.lastDoneAt
+                          ? `: ${formatDate(item.lastDoneAt)}`
+                          : ""}
+                      </p>
+                    )}
 
                     {item.providerName ? (
                       <p className="mt-1 text-sm text-[var(--mt-muted)]">
@@ -418,13 +447,13 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
                       </p>
                     ) : null}
 
-                    {item.lastDoneAt ? (
+                    {item.nextDueAt && item.lastDoneAt ? (
                       <p className="mt-1 text-sm text-[var(--mt-muted)]">
                         Ostatnio: {formatDate(item.lastDoneAt)}
                       </p>
                     ) : null}
 
-                    {formatInterval(item.intervalMonths) ? (
+                    {item.nextDueAt && formatInterval(item.intervalMonths) ? (
                       <p className="mt-1 text-sm text-[var(--mt-ink)]">
                         Cykl: {formatInterval(item.intervalMonths)}
                       </p>
@@ -438,16 +467,18 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
                   </div>
 
                   <div className="flex shrink-0 flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleComplete(item)}
-                      disabled={completingId === item._id}
-                      className="text-sm font-medium text-[var(--mt-ink)] underline-offset-4 transition hover:text-[var(--mt-accent)] hover:underline disabled:opacity-50"
-                    >
-                      {completingId === item._id
-                        ? "Zapisuję…"
-                        : "Oznacz wykonane"}
-                    </button>
+                    {item.nextDueAt ? (
+                      <button
+                        type="button"
+                        onClick={() => handleComplete(item)}
+                        disabled={completingId === item._id}
+                        className="text-sm font-medium text-[var(--mt-ink)] underline-offset-4 transition hover:text-[var(--mt-accent)] hover:underline disabled:opacity-50"
+                      >
+                        {completingId === item._id
+                          ? "Zapisuję…"
+                          : "Oznacz wykonane"}
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => {

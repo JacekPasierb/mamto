@@ -143,6 +143,10 @@ export async function POST(request: Request, context: RouteContext) {
         ? PET_CARE_DEFAULT_INTERVAL_MONTHS[resolvedType]
         : Number(intervalMonths);
 
+    const resolvedLastDoneAt = lastDoneAt
+      ? parseCalendarDate(lastDoneAt)
+      : null;
+
     const item = await PetCare.create({
       userId,
       petId: id,
@@ -150,7 +154,7 @@ export async function POST(request: Request, context: RouteContext) {
       type: resolvedType,
       diseases: resolvedDiseases,
       providerName: providerName?.trim() || "",
-      lastDoneAt: lastDoneAt ? parseCalendarDate(lastDoneAt) : null,
+      lastDoneAt: resolvedLastDoneAt,
       nextDueAt: parseCalendarDate(nextDueAt),
       intervalMonths:
         Number.isFinite(resolvedInterval) && resolvedInterval > 0

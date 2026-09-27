@@ -134,6 +134,7 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
   const [editingService, setEditingService] =
     useState<VehicleServiceItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [completingId, setCompletingId] = useState<string | null>(null);
   const [isDeletingVehicle, setIsDeletingVehicle] = useState(false);
 
   const loadServices = useCallback(async () => {
@@ -273,6 +274,38 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
       window.alert("Nie udało się usunąć serwisu.");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleComplete = async (service: VehicleServiceItem) => {
+    const confirmed = window.confirm(
+      `Oznaczyć „${service.title}” jako wykonane? Obecny wpis zostanie w historii, a dodamy kolejny z nowym terminem.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setCompletingId(service._id);
+
+      const response = await fetch(
+        `/api/vehicles/${vehicle._id}/services/${service._id}/complete`,
+        {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({mileage}),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Nie udało się oznaczyć serwisu");
+      }
+
+      await loadServices();
+    } catch (error) {
+      console.error(error);
+      window.alert("Nie udało się oznaczyć serwisu.");
+    } finally {
+      setCompletingId(null);
     }
   };
 
@@ -622,6 +655,7 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
                         {overdue ? " · po terminie" : ""}
                       </p>
                     )}
+
                     {service.notes ? (
                       <p className="mt-2 text-sm text-[var(--mt-muted)]">
                         {service.notes}
@@ -629,7 +663,19 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
                     ) : null}
                   </div>
 
-                  <div className="flex shrink-0 gap-4 self-start">
+                  <div className="flex shrink-0 flex-wrap gap-3 self-start">
+                    {(service.nextDueAt || service.nextDueMileage != null) && (
+                      <button
+                        type="button"
+                        onClick={() => handleComplete(service)}
+                        disabled={completingId === service._id}
+                        className="text-sm font-medium text-[var(--mt-ink)] underline-offset-4 transition hover:text-[var(--mt-accent)] hover:underline disabled:opacity-50"
+                      >
+                        {completingId === service._id
+                          ? "Zapisuję…"
+                          : "Oznacz wykonane"}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => openEditModal(service)}
