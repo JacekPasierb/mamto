@@ -32,6 +32,6 @@ export default async () => {
 };
 
 export const config = {
-  // TYMCZASOWO 22:30 PL (CEST) = 20:30 UTC
-  schedule: "30 20 * * *",
+  // 6:00 UTC → ~7:00 PL zimą / ~8:00 PL latem
+  schedule: "0 6 * * *",
 };
