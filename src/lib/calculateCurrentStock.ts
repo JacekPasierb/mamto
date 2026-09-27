@@ -75,9 +75,7 @@ export function isStockUrgent(
 export function toDateInputValue(value: Date | string | null | undefined): string {
   if (!value) return "";
 
-  const date = parseCalendarDate(
-    typeof value === "string" ? value : value.toISOString()
-  );
+  const date = parseCalendarDate(value);
 
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");

@@ -50,12 +50,12 @@ export async function POST(_request: Request, context: RouteContext) {
       );
     }
 
-    // Wyłącz powiadomienie. Zostaw wpisaną datę wykonania;
-    // jeśli jej nie było — użyj wpisanego terminu (nie dziś, nie z interwału).
+    // Wyłącz powiadomienie. Data wykonania = wpisany następny termin
+    // (np. 14.12), nie poprzednia data ani wynik z interwału.
     const item = await PetCare.findOneAndUpdate(
       {_id: careId, petId: id, userId},
       {
-        lastDoneAt: existing.lastDoneAt || existing.nextDueAt,
+        lastDoneAt: existing.nextDueAt,
         nextDueAt: null,
       },
       {new: true}
