@@ -67,12 +67,70 @@ export const PET_CARE_DEFAULT_INTERVAL_MONTHS: Record<PetCareType, number> = {
   other: 6,
 };
 
+/** Choroby w szczepieniu „choroby zakaźne”. */
+export const INFECTIOUS_DISEASES = [
+  "parvovirus",
+  "distemper",
+  "hepatitis",
+  "leptospirosis",
+  "coronavirus",
+  "kennel_cough",
+  "lyme",
+] as const;
+
+export type InfectiousDisease = (typeof INFECTIOUS_DISEASES)[number];
+
+export const INFECTIOUS_DISEASE_LABELS: Record<InfectiousDisease, string> = {
+  parvovirus: "Parwowiroza",
+  distemper: "Nosówka",
+  hepatitis: "Zakaźne zapalenie wątroby",
+  leptospirosis: "Leptospiroza",
+  coronavirus: "Koronawiroza",
+  kennel_cough: "Kaszel kenelowy",
+  lyme: "Borelioza",
+};
+
+/** Domyślnie zaznaczone przy nowym szczepieniu przeciw zakaźnym. */
+export const INFECTIOUS_DISEASE_DEFAULTS: InfectiousDisease[] = [
+  "parvovirus",
+  "distemper",
+  "hepatitis",
+  "leptospirosis",
+];
+
 export function normalizePetCareType(type: string): PetCareType {
   if ((PET_CARE_TYPES as readonly string[]).includes(type)) {
     return type as PetCareType;
   }
 
   return "other";
+}
+
+export function normalizeInfectiousDiseases(
+  value: unknown
+): InfectiousDisease[] {
+  if (!Array.isArray(value)) return [];
+
+  const allowed = new Set<string>(INFECTIOUS_DISEASES);
+  const seen = new Set<InfectiousDisease>();
+  const result: InfectiousDisease[] = [];
+
+  for (const entry of value) {
+    if (typeof entry !== "string" || !allowed.has(entry)) continue;
+    const disease = entry as InfectiousDisease;
+    if (seen.has(disease)) continue;
+    seen.add(disease);
+    result.push(disease);
+  }
+
+  return result;
+}
+
+export function formatInfectiousDiseases(
+  diseases: InfectiousDisease[] | null | undefined
+): string {
+  if (!diseases?.length) return "";
+  return diseases.map((d) => INFECTIOUS_DISEASE_LABELS[d]).join(", ");
 }
 
 export const PET_CARE_URGENT_DAYS = 14;

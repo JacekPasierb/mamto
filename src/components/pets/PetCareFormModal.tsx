@@ -5,12 +5,17 @@ import {useEffect, useState} from "react";
 import {toDateInputValue} from "@/lib/calculateCurrentStock";
 import {addMonths} from "@/lib/petHelpers";
 import {
+  INFECTIOUS_DISEASES,
+  INFECTIOUS_DISEASE_DEFAULTS,
+  INFECTIOUS_DISEASE_LABELS,
   PET_CARE_DEFAULT_INTERVAL_MONTHS,
   PET_CARE_FORM_TYPES,
   PET_CARE_NAME_SUGGESTIONS,
   PET_CARE_TYPE_HINTS,
   PET_CARE_TYPE_LABELS,
+  normalizeInfectiousDiseases,
   normalizePetCareType,
+  type InfectiousDisease,
   type PetCareFormType,
   type PetCareType,
 } from "@/lib/petTypes";
@@ -19,6 +24,7 @@ export type PetCareFormValues = {
   _id: string;
   name: string;
   type: PetCareType;
+  diseases?: InfectiousDisease[];
   providerName: string;
   lastDoneAt: string | null;
   nextDueAt: string;
@@ -48,6 +54,9 @@ const PetCareFormModal = ({
 
   const [name, setName] = useState("");
   const [type, setType] = useState<PetCareFormType>("rabies");
+  const [diseases, setDiseases] = useState<InfectiousDisease[]>(
+    INFECTIOUS_DISEASE_DEFAULTS
+  );
   const [providerName, setProviderName] = useState("");
   const [lastDoneAt, setLastDoneAt] = useState("");
   const [nextDueAt, setNextDueAt] = useState("");
@@ -67,16 +76,21 @@ const PetCareFormModal = ({
     if (!isOpen) return;
 
     if (item) {
+      const resolvedType = normalizePetCareType(item.type);
+      const savedDiseases = normalizeInfectiousDiseases(item.diseases);
       setName(item.name);
-      setType(normalizePetCareType(item.type));
+      setType(resolvedType);
+      setDiseases(
+        savedDiseases.length > 0
+          ? savedDiseases
+          : [...INFECTIOUS_DISEASE_DEFAULTS]
+      );
       setProviderName(item.providerName || "");
       setLastDoneAt(toDateInputValue(item.lastDoneAt) || "");
       setNextDueAt(toDateInputValue(item.nextDueAt) || "");
       setIntervalMonths(
         item.intervalMonths == null
-          ? String(
-              PET_CARE_DEFAULT_INTERVAL_MONTHS[normalizePetCareType(item.type)]
-            )
+          ? String(PET_CARE_DEFAULT_INTERVAL_MONTHS[resolvedType])
           : String(item.intervalMonths)
       );
       setNotes(item.notes || "");
@@ -85,6 +99,7 @@ const PetCareFormModal = ({
       const months = PET_CARE_DEFAULT_INTERVAL_MONTHS[defaultType];
       setName(PET_CARE_NAME_SUGGESTIONS[defaultType][0] || "");
       setType(defaultType);
+      setDiseases([...INFECTIOUS_DISEASE_DEFAULTS]);
       setProviderName("");
       setLastDoneAt("");
       setNextDueAt(toDateInputValue(addMonths(new Date(), months)));
@@ -111,7 +126,21 @@ const PetCareFormModal = ({
       setName(PET_CARE_NAME_SUGGESTIONS[next][0] || "");
     }
 
+    if (next === "infectious") {
+      setDiseases((prev) =>
+        prev.length > 0 ? prev : [...INFECTIOUS_DISEASE_DEFAULTS]
+      );
+    }
+
     applyNextDue(lastDoneAt, String(months));
+  };
+
+  const toggleDisease = (disease: InfectiousDisease) => {
+    setDiseases((prev) =>
+      prev.includes(disease)
+        ? prev.filter((entry) => entry !== disease)
+        : [...prev, disease]
+    );
   };
 
   const handleLastDoneChange = (value: string) => {
@@ -127,6 +156,11 @@ const PetCareFormModal = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (type === "infectious" && diseases.length === 0) {
+      setError("Zaznacz przynajmniej jedną chorobę.");
+      return;
+    }
+
     try {
       setIsSaving(true);
       setError("");
@@ -134,6 +168,7 @@ const PetCareFormModal = ({
       const payload = {
         name,
         type,
+        diseases: type === "infectious" ? diseases : [],
         providerName,
         lastDoneAt: lastDoneAt || null,
         nextDueAt,
@@ -228,6 +263,37 @@ const PetCareFormModal = ({
               {PET_CARE_TYPE_HINTS[type]}
             </p>
           </div>
+
+          {type === "infectious" ? (
+            <fieldset>
+              <legend className="mb-2 block text-sm text-[var(--mt-muted)]">
+                Choroby w szczepieniu
+              </legend>
+              <div className="space-y-2 border border-[var(--mt-line)] bg-[var(--mt-bg)] px-3 py-3">
+                {INFECTIOUS_DISEASES.map((disease) => {
+                  const checked = diseases.includes(disease);
+
+                  return (
+                    <label
+                      key={disease}
+                      className="flex cursor-pointer items-center gap-3 px-1 py-1.5 text-sm text-[var(--mt-ink)] transition hover:text-[var(--mt-accent)]"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleDisease(disease)}
+                        className="size-4 accent-[var(--mt-accent)]"
+                      />
+                      <span>{INFECTIOUS_DISEASE_LABELS[disease]}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-[var(--mt-muted)]">
+                Zaznacz, które choroby objęło to szczepienie.
+              </p>
+            </fieldset>
+          ) : null}
 
           <div>
             <label className="mb-2 block text-sm text-[var(--mt-muted)]">

@@ -1,6 +1,6 @@
 import mongoose, {Schema} from "mongoose";
 
-import {PET_CARE_TYPES} from "@/lib/petTypes";
+import {INFECTIOUS_DISEASES, PET_CARE_TYPES} from "@/lib/petTypes";
 
 const PetCareSchema = new Schema(
   {
@@ -28,6 +28,17 @@ const PetCareSchema = new Schema(
       enum: [...PET_CARE_TYPES],
       default: "rabies",
       index: true,
+    },
+
+    /** Wybrane choroby przy typie `infectious`. */
+    diseases: {
+      type: [
+        {
+          type: String,
+          enum: [...INFECTIOUS_DISEASES],
+        },
+      ],
+      default: [],
     },
 
     providerName: {

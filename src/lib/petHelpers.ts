@@ -2,13 +2,18 @@ import {
   parseCalendarDate,
   todayCalendarDate,
 } from "@/lib/calculateCurrentStock";
-import {PET_CARE_URGENT_DAYS, type PetCareType} from "@/lib/petTypes";
+import {
+  PET_CARE_URGENT_DAYS,
+  type InfectiousDisease,
+  type PetCareType,
+} from "@/lib/petTypes";
 
 export type PetCareRecord = {
   _id?: unknown;
   petId?: unknown;
   name: string;
   type: PetCareType;
+  diseases?: InfectiousDisease[];
   providerName?: string;
   lastDoneAt?: Date | string | null;
   nextDueAt: Date | string;

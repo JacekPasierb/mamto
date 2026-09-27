@@ -35,7 +35,10 @@ import {
   PET_CARE_TYPE_LABELS,
   PET_CARE_UPCOMING_DAYS,
   PET_CARE_URGENT_DAYS,
+  formatInfectiousDiseases,
+  normalizeInfectiousDiseases,
   normalizePetCareType,
+  type InfectiousDisease,
   type PetCareType,
 } from "@/lib/petTypes";
 import InsurancePolicy from "@/models/InsurancePolicy";
@@ -473,6 +476,7 @@ export async function GET() {
       petId: unknown;
       name: string;
       type: PetCareType;
+      diseases?: InfectiousDisease[];
       providerName?: string;
       nextDueAt: Date;
     }[];
@@ -491,12 +495,18 @@ export async function GET() {
             ? "termin dziś"
             : `za ${days} dni`;
 
+      const diseasesLabel =
+        normalizePetCareType(care.type) === "infectious"
+          ? formatInfectiousDiseases(normalizeInfectiousDiseases(care.diseases))
+          : "";
+
       const item: ReminderItem = {
         id: `pet-care-${String(care._id)}`,
         title: care.name,
         subtitle: [
           petName,
           PET_CARE_TYPE_LABELS[normalizePetCareType(care.type)],
+          diseasesLabel || null,
           care.providerName || null,
         ]
           .filter(Boolean)

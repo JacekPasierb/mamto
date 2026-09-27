@@ -6,9 +6,11 @@ import {useCallback, useEffect, useMemo, useState} from "react";
 
 import {toDateInputValue} from "@/lib/calculateCurrentStock";
 import {
+  INFECTIOUS_DISEASE_LABELS,
   PET_CARE_FORM_TYPES,
   PET_CARE_TYPE_LABELS,
   PET_SPECIES_LABELS,
+  normalizeInfectiousDiseases,
   normalizePetCareType,
   type PetCareFormType,
   type PetSpecies,
@@ -386,6 +388,22 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
                     <h3 className="font-display mt-2 text-xl tracking-tight">
                       {item.name}
                     </h3>
+
+                    {normalizePetCareType(item.type) === "infectious" &&
+                    normalizeInfectiousDiseases(item.diseases).length > 0 ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {normalizeInfectiousDiseases(item.diseases).map(
+                          (disease) => (
+                            <span
+                              key={disease}
+                              className="border border-[var(--mt-line)] px-2.5 py-1 text-xs text-[var(--mt-ink)]"
+                            >
+                              {INFECTIOUS_DISEASE_LABELS[disease]}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    ) : null}
 
                     <p className="mt-2 text-sm text-[var(--mt-muted)]">
                       Następny: {formatDate(item.nextDueAt)}

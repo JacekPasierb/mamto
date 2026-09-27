@@ -7,6 +7,7 @@ import {enrichPetCare} from "@/lib/petHelpers";
 import {
   PET_CARE_DEFAULT_INTERVAL_MONTHS,
   PET_CARE_TYPES,
+  normalizeInfectiousDiseases,
   type PetCareType,
 } from "@/lib/petTypes";
 import {connectDB} from "@/lib/mongodb";
@@ -37,6 +38,7 @@ export async function PUT(request: Request, context: RouteContext) {
     const {
       name,
       type,
+      diseases,
       providerName,
       lastDoneAt,
       nextDueAt,
@@ -66,6 +68,18 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const resolvedType = (type as PetCareType) || "rabies";
+    const resolvedDiseases =
+      resolvedType === "infectious"
+        ? normalizeInfectiousDiseases(diseases)
+        : [];
+
+    if (resolvedType === "infectious" && resolvedDiseases.length === 0) {
+      return NextResponse.json(
+        {message: "Wybierz przynajmniej jedną chorobę"},
+        {status: 400}
+      );
+    }
+
     const resolvedInterval =
       intervalMonths === "" || intervalMonths == null
         ? PET_CARE_DEFAULT_INTERVAL_MONTHS[resolvedType]
@@ -78,6 +92,7 @@ export async function PUT(request: Request, context: RouteContext) {
       {
         name: name.trim(),
         type: resolvedType,
+        diseases: resolvedDiseases,
         providerName: providerName?.trim() || "",
         lastDoneAt: lastDoneAt ? parseCalendarDate(lastDoneAt) : null,
         nextDueAt: parseCalendarDate(nextDueAt),
