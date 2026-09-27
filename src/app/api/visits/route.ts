@@ -2,6 +2,8 @@ import {auth} from "@clerk/nextjs/server";
 import {NextResponse} from "next/server";
 
 import {parseCalendarDate, todayCalendarDate} from "@/lib/calculateCurrentStock";
+import {connectDB} from "@/lib/mongodb";
+import {resolveVisitProvider} from "@/lib/resolveVisitProvider";
 import {enrichVisit} from "@/lib/visitHelpers";
 import {
   VISIT_DEFAULT_INTERVAL_MONTHS,
@@ -9,7 +11,6 @@ import {
   VISIT_TYPES,
   type VisitType,
 } from "@/lib/visitTypes";
-import {connectDB} from "@/lib/mongodb";
 import PersonalVisit from "@/models/PersonalVisit";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +64,7 @@ export async function POST(request: Request) {
       name,
       type,
       providerName,
+      providerId,
       lastVisitAt,
       nextDueAt,
       intervalMonths,
@@ -102,11 +104,18 @@ export async function POST(request: Request) {
 
     await connectDB();
 
+    const provider = await resolveVisitProvider(userId, {
+      category: resolvedType,
+      providerId,
+      providerName,
+    });
+
     const visit = await PersonalVisit.create({
       userId,
       name: name.trim(),
       type: resolvedType,
-      providerName: providerName?.trim() || "",
+      providerName: provider.providerName,
+      providerId: provider.providerId,
       lastVisitAt: lastVisitAt ? parseCalendarDate(lastVisitAt) : null,
       nextDueAt: parseCalendarDate(nextDueAt),
       intervalMonths:

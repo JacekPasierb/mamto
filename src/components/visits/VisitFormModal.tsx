@@ -14,12 +14,14 @@ import {
   type VisitFormType,
   type VisitType,
 } from "@/lib/visitTypes";
+import VisitProviderCombobox from "./VisitProviderCombobox";
 
 export type VisitFormValues = {
   _id: string;
   name: string;
   type: VisitType;
   providerName: string;
+  providerId?: string | null;
   lastVisitAt: string | null;
   nextDueAt: string;
   intervalMonths: number | null;
@@ -48,6 +50,7 @@ const VisitFormModal = ({
   const [name, setName] = useState("");
   const [type, setType] = useState<VisitFormType>("health");
   const [providerName, setProviderName] = useState("");
+  const [providerId, setProviderId] = useState<string | null>(null);
   const [lastVisitAt, setLastVisitAt] = useState("");
   const [nextDueAt, setNextDueAt] = useState("");
   const [intervalMonths, setIntervalMonths] = useState("12");
@@ -62,6 +65,7 @@ const VisitFormModal = ({
       setName(item.name);
       setType(normalizeVisitType(item.type));
       setProviderName(item.providerName || "");
+      setProviderId(item.providerId ? String(item.providerId) : null);
       setLastVisitAt(toDateInputValue(item.lastVisitAt) || "");
       setNextDueAt(toDateInputValue(item.nextDueAt) || "");
       setIntervalMonths(
@@ -78,6 +82,7 @@ const VisitFormModal = ({
       setName("");
       setType(defaultType);
       setProviderName("");
+      setProviderId(null);
       setLastVisitAt("");
       setNextDueAt(toDateInputValue(addMonths(new Date(), months)));
       setIntervalMonths(String(months));
@@ -91,6 +96,8 @@ const VisitFormModal = ({
 
   const handleTypeChange = (next: VisitFormType) => {
     setType(next);
+    setProviderName("");
+    setProviderId(null);
     const months = VISIT_DEFAULT_INTERVAL_MONTHS[next];
     setIntervalMonths(String(months));
 
@@ -124,6 +131,7 @@ const VisitFormModal = ({
         name,
         type,
         providerName,
+        providerId,
         lastVisitAt: lastVisitAt || null,
         nextDueAt,
         intervalMonths: intervalMonths || null,
@@ -249,17 +257,16 @@ const VisitFormModal = ({
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-              Specjalista / salon
-            </label>
-            <input
-              value={providerName}
-              onChange={(e) => setProviderName(e.target.value)}
-              placeholder="Opcjonalnie"
-              className={fieldClass}
-            />
-          </div>
+          <VisitProviderCombobox
+            category={type}
+            value={providerName}
+            providerId={providerId}
+            onChange={(nextName, nextId) => {
+              setProviderName(nextName);
+              setProviderId(nextId);
+            }}
+            disabled={isSaving}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div>

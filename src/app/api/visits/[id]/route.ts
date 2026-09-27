@@ -3,6 +3,8 @@ import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 
 import {parseCalendarDate, todayCalendarDate} from "@/lib/calculateCurrentStock";
+import {connectDB} from "@/lib/mongodb";
+import {resolveVisitProvider} from "@/lib/resolveVisitProvider";
 import {enrichVisit} from "@/lib/visitHelpers";
 import {
   VISIT_DEFAULT_INTERVAL_MONTHS,
@@ -10,7 +12,6 @@ import {
   VISIT_TYPES,
   type VisitType,
 } from "@/lib/visitTypes";
-import {connectDB} from "@/lib/mongodb";
 import PersonalVisit from "@/models/PersonalVisit";
 
 type RouteContext = {
@@ -38,6 +39,7 @@ export async function PUT(request: Request, context: RouteContext) {
       name,
       type,
       providerName,
+      providerId,
       lastVisitAt,
       nextDueAt,
       intervalMonths,
@@ -77,12 +79,19 @@ export async function PUT(request: Request, context: RouteContext) {
 
     await connectDB();
 
+    const provider = await resolveVisitProvider(userId, {
+      category: resolvedType,
+      providerId,
+      providerName,
+    });
+
     const visit = await PersonalVisit.findOneAndUpdate(
       {_id: id, userId},
       {
         name: name.trim(),
         type: resolvedType,
-        providerName: providerName?.trim() || "",
+        providerName: provider.providerName,
+        providerId: provider.providerId,
         lastVisitAt: lastVisitAt ? parseCalendarDate(lastVisitAt) : null,
         nextDueAt: parseCalendarDate(nextDueAt),
         intervalMonths:
@@ -150,4 +159,3 @@ export async function DELETE(_request: Request, context: RouteContext) {
     );
   }
 }
-

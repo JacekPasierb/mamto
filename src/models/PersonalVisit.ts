@@ -29,6 +29,12 @@ const PersonalVisitSchema = new Schema(
       trim: true,
     },
 
+    providerId: {
+      type: Schema.Types.ObjectId,
+      ref: "VisitProvider",
+      default: null,
+    },
+
     lastVisitAt: {
       type: Date,
       default: null,

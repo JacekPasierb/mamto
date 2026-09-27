@@ -9,6 +9,7 @@ export type VisitRecord = {
   name: string;
   type: VisitType;
   providerName?: string;
+  providerId?: unknown;
   lastVisitAt?: Date | string | null;
   nextDueAt: Date | string;
   intervalMonths?: number | null;
