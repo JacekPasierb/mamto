@@ -19,6 +19,7 @@ import {
   type PetCareFormType,
   type PetCareType,
 } from "@/lib/petTypes";
+import VetCombobox from "./VetCombobox";
 
 export type PetCareFormValues = {
   _id: string;
@@ -60,6 +61,7 @@ const PetCareFormModal = ({
     INFECTIOUS_DISEASE_DEFAULTS
   );
   const [providerName, setProviderName] = useState("");
+  const [providerVetId, setProviderVetId] = useState<string | null>(null);
   const [lastDoneAt, setLastDoneAt] = useState("");
   const [nextDueAt, setNextDueAt] = useState("");
   const [intervalMonths, setIntervalMonths] = useState("12");
@@ -89,6 +91,7 @@ const PetCareFormModal = ({
           : [...INFECTIOUS_DISEASE_DEFAULTS]
       );
       setProviderName(item.providerName || "");
+      setProviderVetId(null);
       setLastDoneAt(toDateInputValue(item.lastDoneAt) || "");
       setNextDueAt(toDateInputValue(item.nextDueAt) || "");
       setIntervalMonths(
@@ -105,6 +108,7 @@ const PetCareFormModal = ({
       setType(defaultType);
       setDiseases([...INFECTIOUS_DISEASE_DEFAULTS]);
       setProviderName("");
+      setProviderVetId(null);
       setLastDoneAt("");
       setNextDueAt("");
       setIntervalMonths(String(months));
@@ -187,6 +191,7 @@ const PetCareFormModal = ({
         type,
         diseases: type === "infectious" ? diseases : [],
         providerName,
+        providerVetId,
         lastDoneAt: lastDoneAt || null,
         nextDueAt,
         intervalMonths: intervalMonths || null,
@@ -336,17 +341,17 @@ const PetCareFormModal = ({
             </div>
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-              Wet / preparat
-            </label>
-            <input
-              value={providerName}
-              onChange={(e) => setProviderName(e.target.value)}
-              placeholder="Klinika lub nazwa preparatu"
-              className={fieldClass}
-            />
-          </div>
+          <VetCombobox
+            value={providerName}
+            vetId={providerVetId}
+            onChange={(nameValue, idValue) => {
+              setProviderName(nameValue);
+              setProviderVetId(idValue);
+            }}
+            label="Wet / preparat"
+            placeholder="Klinika, lekarz lub nazwa preparatu"
+            createHint="Klinika: „Dodaj” lub Enter. Preparat: wpisz nazwę i zostaw."
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div>

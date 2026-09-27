@@ -1,4 +1,4 @@
-import mongoose, {Schema, models} from "mongoose";
+import mongoose, {Schema} from "mongoose";
 
 const VetSchema = new Schema(
   {
@@ -38,6 +38,10 @@ const VetSchema = new Schema(
 
 VetSchema.index({userId: 1, name: 1});
 
-const Vet = models.Vet || mongoose.model("Vet", VetSchema);
+if (mongoose.models.Vet) {
+  delete mongoose.models.Vet;
+}
+
+const Vet = mongoose.model("Vet", VetSchema);
 
 export default Vet;

@@ -15,6 +15,9 @@ type VetComboboxProps = {
   onChange: (name: string, vetId: string | null) => void;
   disabled?: boolean;
   required?: boolean;
+  label?: string;
+  placeholder?: string;
+  createHint?: string;
 };
 
 const VetCombobox = ({
@@ -23,10 +26,15 @@ const VetCombobox = ({
   onChange,
   disabled = false,
   required = false,
+  label = "Weterynarz",
+  placeholder = "Wpisz lub wybierz klinikę / lekarza",
+  createHint = "Wpisz nazwę i wybierz „Dodaj”, albo naciśnij Enter.",
 }: VetComboboxProps) => {
   const [vets, setVets] = useState<VetOption[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const loadVets = useCallback(async (query = "") => {
@@ -73,25 +81,75 @@ const VetCombobox = ({
     };
   }, []);
 
+  const trimmedValue = value.trim();
+
   const suggestions = useMemo(() => {
-    const query = value.trim().toLowerCase();
+    const query = trimmedValue.toLowerCase();
 
     if (!query) {
       return vets;
     }
 
     return vets.filter((vet) => vet.name.toLowerCase().includes(query));
-  }, [vets, value]);
+  }, [vets, trimmedValue]);
+
+  const exactMatch = useMemo(() => {
+    if (!trimmedValue) return null;
+
+    return (
+      vets.find(
+        (vet) => vet.name.toLowerCase() === trimmedValue.toLowerCase()
+      ) || null
+    );
+  }, [vets, trimmedValue]);
+
+  const canCreateNew = Boolean(trimmedValue) && !exactMatch && !vetId;
 
   const handleInputChange = (nextValue: string) => {
+    setCreateError("");
     onChange(nextValue, null);
     setIsOpen(true);
     loadVets(nextValue);
   };
 
   const handleSelect = (vet: VetOption) => {
+    setCreateError("");
     onChange(vet.name, vet._id);
     setIsOpen(false);
+  };
+
+  const handleCreate = async () => {
+    if (!canCreateNew || isCreating) return;
+
+    try {
+      setIsCreating(true);
+      setCreateError("");
+
+      const response = await fetch("/api/vets", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({name: trimmedValue}),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || "Nie udało się dodać kliniki");
+      }
+
+      const created = await response.json();
+      onChange(created.name, String(created._id));
+      await loadVets();
+      setIsOpen(false);
+    } catch (error) {
+      console.error(error);
+      setCreateError(
+        error instanceof Error
+          ? error.message
+          : "Nie udało się dodać kliniki."
+      );
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const fieldClass =
@@ -100,15 +158,21 @@ const VetCombobox = ({
   return (
     <div ref={containerRef} className="relative">
       <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-        Weterynarz
+        {label}
       </label>
       <input
         type="text"
         value={value}
         onChange={(e) => handleInputChange(e.target.value)}
         onFocus={() => setIsOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && canCreateNew) {
+            e.preventDefault();
+            handleCreate();
+          }
+        }}
         disabled={disabled}
-        placeholder="Wpisz lub wybierz klinikę / lekarza"
+        placeholder={placeholder}
         required={required}
         autoComplete="off"
         className={fieldClass}
@@ -118,10 +182,12 @@ const VetCombobox = ({
         <p className="mt-2 text-xs text-[var(--mt-muted)]">
           Wybrano zapisaną weterynarię.
         </p>
-      ) : value.trim() ? (
-        <p className="mt-2 text-xs text-[var(--mt-muted)]">
-          Nowa weterynaria zostanie zapisana przy zapisie zwierzęcia.
-        </p>
+      ) : canCreateNew ? (
+        <p className="mt-2 text-xs text-[var(--mt-muted)]">{createHint}</p>
+      ) : null}
+
+      {createError ? (
+        <p className="mt-2 text-xs text-[var(--mt-signal)]">{createError}</p>
       ) : null}
 
       {isOpen && !disabled ? (
@@ -130,35 +196,50 @@ const VetCombobox = ({
             <p className="px-4 py-3 text-sm text-[var(--mt-muted)]">
               Ładowanie…
             </p>
-          ) : suggestions.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-[var(--mt-muted)]">
-              {value.trim()
-                ? "Brak dopasowań — zostanie utworzona nowa weterynaria."
-                : "Brak zapisanych weterynarii."}
-            </p>
           ) : (
-            <ul>
-              {suggestions.map((vet) => (
-                <li key={vet._id}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelect(vet)}
-                    className={`block w-full px-4 py-3 text-left text-sm transition hover:bg-[var(--mt-bg)] ${
-                      vetId === vet._id
-                        ? "bg-[var(--mt-bg)] font-medium text-[var(--mt-ink)]"
-                        : "text-[var(--mt-ink)]"
-                    }`}
-                  >
-                    <span>{vet.name}</span>
-                    {vet.address ? (
-                      <span className="mt-1 block text-xs text-[var(--mt-muted)]">
-                        {vet.address}
-                      </span>
-                    ) : null}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <>
+              {canCreateNew ? (
+                <button
+                  type="button"
+                  onClick={handleCreate}
+                  disabled={isCreating}
+                  className="block w-full border-b border-[var(--mt-line)] px-4 py-3 text-left text-sm font-medium text-[var(--mt-accent)] transition hover:bg-[var(--mt-bg)] disabled:opacity-50"
+                >
+                  {isCreating
+                    ? "Dodaję…"
+                    : `Dodaj „${trimmedValue}”`}
+                </button>
+              ) : null}
+
+              {suggestions.length === 0 && !canCreateNew ? (
+                <p className="px-4 py-3 text-sm text-[var(--mt-muted)]">
+                  Brak zapisanych weterynarii.
+                </p>
+              ) : (
+                <ul>
+                  {suggestions.map((vet) => (
+                    <li key={vet._id}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelect(vet)}
+                        className={`block w-full px-4 py-3 text-left text-sm transition hover:bg-[var(--mt-bg)] ${
+                          vetId === vet._id
+                            ? "bg-[var(--mt-bg)] font-medium text-[var(--mt-ink)]"
+                            : "text-[var(--mt-ink)]"
+                        }`}
+                      >
+                        <span>{vet.name}</span>
+                        {vet.address ? (
+                          <span className="mt-1 block text-xs text-[var(--mt-muted)]">
+                            {vet.address}
+                          </span>
+                        ) : null}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
         </div>
       ) : null}
