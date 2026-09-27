@@ -50,10 +50,14 @@ export async function POST(_request: Request, context: RouteContext) {
       );
     }
 
-    // Tylko wyłącz termin / powiadomienie — bez zmiany dat.
+    // Wyłącz powiadomienie. Zostaw wpisaną datę wykonania;
+    // jeśli jej nie było — użyj wpisanego terminu (nie dziś, nie z interwału).
     const item = await PetCare.findOneAndUpdate(
       {_id: careId, petId: id, userId},
-      {nextDueAt: null},
+      {
+        lastDoneAt: existing.lastDoneAt || existing.nextDueAt,
+        nextDueAt: null,
+      },
       {new: true}
     );
 

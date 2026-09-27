@@ -63,14 +63,15 @@ const PetCareFormModal = ({
   const [nextDueAt, setNextDueAt] = useState("");
   const [intervalMonths, setIntervalMonths] = useState("12");
   const [notes, setNotes] = useState("");
+  const [nextDueManual, setNextDueManual] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
   const computeNextDue = (doneAt: string, monthsStr: string) => {
     const months = Number(monthsStr);
     if (!Number.isFinite(months) || months <= 0) return null;
-    const base = doneAt || toDateInputValue(new Date());
-    return toDateInputValue(addMonths(base, months));
+    if (!doneAt) return null;
+    return toDateInputValue(addMonths(doneAt, months));
   };
 
   useEffect(() => {
@@ -95,6 +96,7 @@ const PetCareFormModal = ({
           : String(item.intervalMonths)
       );
       setNotes(item.notes || "");
+      setNextDueManual(Boolean(item.nextDueAt));
     } else {
       const defaultType: PetCareFormType = "rabies";
       const months = PET_CARE_DEFAULT_INTERVAL_MONTHS[defaultType];
@@ -103,9 +105,10 @@ const PetCareFormModal = ({
       setDiseases([...INFECTIOUS_DISEASE_DEFAULTS]);
       setProviderName("");
       setLastDoneAt("");
-      setNextDueAt(toDateInputValue(addMonths(new Date(), months)));
+      setNextDueAt("");
       setIntervalMonths(String(months));
       setNotes("");
+      setNextDueManual(false);
     }
 
     setError("");
@@ -114,6 +117,7 @@ const PetCareFormModal = ({
   if (!isOpen) return null;
 
   const applyNextDue = (doneAt: string, monthsStr: string) => {
+    if (nextDueManual) return;
     const next = computeNextDue(doneAt, monthsStr);
     if (next) setNextDueAt(next);
   };
@@ -146,12 +150,23 @@ const PetCareFormModal = ({
 
   const handleLastDoneChange = (value: string) => {
     setLastDoneAt(value);
-    applyNextDue(value, intervalMonths);
+    setNextDueManual(false);
+    const months = Number(intervalMonths);
+    if (!value || !Number.isFinite(months) || months <= 0) return;
+    setNextDueAt(toDateInputValue(addMonths(value, months)));
   };
 
   const handleIntervalChange = (value: string) => {
     setIntervalMonths(value);
-    applyNextDue(lastDoneAt, value);
+    if (nextDueManual || !lastDoneAt) return;
+    const months = Number(value);
+    if (!Number.isFinite(months) || months <= 0) return;
+    setNextDueAt(toDateInputValue(addMonths(lastDoneAt, months)));
+  };
+
+  const handleNextDueChange = (value: string) => {
+    setNextDueAt(value);
+    setNextDueManual(true);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -365,12 +380,13 @@ const PetCareFormModal = ({
             <input
               type="date"
               value={nextDueAt}
-              onChange={(e) => setNextDueAt(e.target.value)}
+              onChange={(e) => handleNextDueChange(e.target.value)}
               required
               className={fieldClass}
             />
             <p className="mt-2 text-xs text-[var(--mt-muted)]">
-              Liczony z daty zabiegu + interwału — możesz poprawić ręcznie.
+              Liczony z wpisanej daty wykonania + interwału — możesz poprawić
+              ręcznie.
             </p>
           </div>
 

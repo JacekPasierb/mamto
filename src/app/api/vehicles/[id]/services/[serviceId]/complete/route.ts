@@ -61,7 +61,7 @@ export async function POST(_request: Request, context: RouteContext) {
       );
     }
 
-    // Tylko wyłącz termin / powiadomienie — bez zmiany daty wykonania.
+    // Tylko wyłącz termin / powiadomienie — data wykonania zostaje jak wpisana.
     const service = await VehicleService.findOneAndUpdate(
       {_id: serviceId, vehicleId: id, userId},
       {
