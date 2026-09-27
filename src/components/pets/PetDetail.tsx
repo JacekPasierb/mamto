@@ -6,6 +6,7 @@ import {useCallback, useEffect, useMemo, useState} from "react";
 
 import ConfirmModal from "@/components/ConfirmModal";
 import {toDateInputValue} from "@/lib/calculateCurrentStock";
+import {ListSkeleton} from "@/components/Skeleton";
 import {
   INFECTIOUS_DISEASE_LABELS,
   PET_CARE_FORM_TYPES,
@@ -360,9 +361,9 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
         </div>
 
         {isLoading ? (
-          <p className="mt-6 text-sm text-[var(--mt-muted)]">
-            Ładowanie opieki…
-          </p>
+          <div className="mt-6">
+            <ListSkeleton rows={4} />
+          </div>
         ) : items.length === 0 ? (
           <div className="mt-6 border border-dashed border-[var(--mt-line)] bg-white/40 px-6 py-14 text-center">
             <p className="text-sm text-[var(--mt-muted)]">

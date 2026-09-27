@@ -24,6 +24,7 @@ import {
   type VehicleServiceIconId,
 } from "@/components/icons/VehicleIcons";
 import ConfirmModal from "@/components/ConfirmModal";
+import {ListSkeleton} from "@/components/Skeleton";
 import PolishPlate from "./PolishPlate";
 import ServiceFormModal, {type ServiceFormValues} from "./ServiceFormModal";
 import ServiceMileageTimeline from "./ServiceMileageTimeline";
@@ -546,9 +547,9 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
         </div>
 
         {isLoading ? (
-          <p className="mt-6 text-sm text-[var(--mt-muted)]">
-            Ładowanie historii…
-          </p>
+          <div className="mt-6">
+            <ListSkeleton rows={4} />
+          </div>
         ) : services.length === 0 ? (
           <div className="mt-6 border border-dashed border-[var(--mt-line)] bg-white/40 px-6 py-14 text-center">
             <p className="text-sm text-[var(--mt-muted)]">

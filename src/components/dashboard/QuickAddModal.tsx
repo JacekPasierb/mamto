@@ -11,6 +11,7 @@ import VehicleFormModal from "@/components/vehicles/VehicleFormModal";
 import VisitFormModal from "@/components/visits/VisitFormModal";
 import PetFormModal from "@/components/pets/PetFormModal";
 import {useSettings, type Modules} from "@/context/SettingsContext";
+import {OptionsSkeleton} from "@/components/Skeleton";
 
 type QuickKind =
   | "vehicle"
@@ -218,7 +219,7 @@ const QuickAddModal = ({isOpen, onClose, onSaved}: QuickAddModalProps) => {
         </div>
 
         {isLoading ? (
-          <p className="mt-8 text-sm text-[var(--mt-muted)]">Ładowanie…</p>
+          <OptionsSkeleton rows={4} />
         ) : visibleOptions.length === 0 ? (
           <p className="mt-8 text-sm text-[var(--mt-muted)]">
             Włącz obszary w ustawieniach, żeby coś dodać.

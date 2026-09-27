@@ -5,6 +5,7 @@ import {useEffect, useState} from "react";
 
 import AppShell from "@/components/dashboard/AppShell";
 import {NavIcon} from "@/components/icons/NavIcons";
+import {CardGridSkeleton} from "@/components/Skeleton";
 import {
   PET_SPECIES_LABELS,
   type PetSpecies,
@@ -92,7 +93,7 @@ const PetsPage = () => {
         </div>
 
         {isLoading ? (
-          <p className="mt-10 text-[var(--mt-muted)]">Ładowanie zwierząt…</p>
+          <CardGridSkeleton className="mt-10" cards={3} />
         ) : pets.length === 0 ? (
           <div className="mt-10 flex flex-col items-center border border-dashed border-[var(--mt-line)] bg-white/40 px-6 py-14 text-center">
             <span

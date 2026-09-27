@@ -4,6 +4,7 @@ import {
   AttentionIcon,
   type AttentionIconId,
 } from "@/components/icons/AttentionIcons";
+import {ListSkeleton} from "@/components/Skeleton";
 
 export type ReminderListItem = {
   id: string;
@@ -101,8 +102,8 @@ const ReminderSection = ({
       </div>
 
       {isLoading ? (
-        <div className="mt-5 border border-dashed border-[var(--mt-line)] bg-white/35 px-6 py-10 text-center">
-          <p className="text-sm text-[var(--mt-muted)]">Ładowanie…</p>
+        <div className="mt-5">
+          <ListSkeleton rows={3} compact />
         </div>
       ) : items.length === 0 ? (
         <div className="mt-5 border border-dashed border-[var(--mt-line)] bg-white/35 px-6 py-10 text-center">

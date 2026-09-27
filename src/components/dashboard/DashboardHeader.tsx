@@ -3,6 +3,7 @@
 import {useEffect, useId, useRef, useState} from "react";
 import Link from "next/link";
 import MamToLogo from "@/components/brand/MamToLogo";
+import {StatusSkeleton} from "@/components/Skeleton";
 import {useUser} from "@clerk/nextjs";
 
 export type DayStatusItem = {
@@ -120,7 +121,7 @@ const DashboardHeader = ({dayStatus}: DashboardHeaderProps) => {
                 : "var(--mt-ink)",
           }}
         >
-          {isLoading ? "Sprawdzam…" : statusLabel}
+          {isLoading ? "…" : statusLabel}
         </p>
         {!isLoading ? (
           <p className="mt-1 text-xs text-[var(--mt-muted)]">{statusDetail}</p>
@@ -206,7 +207,9 @@ const DashboardHeader = ({dayStatus}: DashboardHeaderProps) => {
         </div>
 
         <div className="relative self-start lg:self-end lg:pb-1">
-          {canOpenPanel ? (
+          {isLoading ? (
+            <StatusSkeleton />
+          ) : canOpenPanel ? (
             <button
               ref={triggerRef}
               type="button"

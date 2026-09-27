@@ -4,6 +4,7 @@ import {useCallback, useEffect, useMemo, useState} from "react";
 
 import AppShell from "@/components/dashboard/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
+import {ListSkeleton} from "@/components/Skeleton";
 import {toDateInputValue} from "@/lib/calculateCurrentStock";
 import {
   STOCK_CATEGORIES,
@@ -244,7 +245,9 @@ const StockPage = () => {
         </div>
 
         {isLoading ? (
-          <p className="mt-10 text-[var(--mt-muted)]">Ładowanie zapasów…</p>
+          <div className="mt-10">
+            <ListSkeleton rows={5} />
+          </div>
         ) : items.length === 0 ? (
           <div className="mt-10 border border-dashed border-[var(--mt-line)] bg-white/40 px-6 py-14 text-center">
             <p className="text-[var(--mt-muted)]">

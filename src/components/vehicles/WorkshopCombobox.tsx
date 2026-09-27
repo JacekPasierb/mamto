@@ -2,6 +2,8 @@
 
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 
+import {DropdownSkeleton} from "@/components/Skeleton";
+
 export type WorkshopOption = {
   _id: string;
   name: string;
@@ -127,9 +129,7 @@ const WorkshopCombobox = ({
       {isOpen && !disabled ? (
         <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto border border-[var(--mt-line)] bg-white shadow-sm">
           {isLoading ? (
-            <p className="px-4 py-3 text-sm text-[var(--mt-muted)]">
-              Ładowanie…
-            </p>
+            <DropdownSkeleton />
           ) : suggestions.length === 0 ? (
             <p className="px-4 py-3 text-sm text-[var(--mt-muted)]">
               {value.trim()

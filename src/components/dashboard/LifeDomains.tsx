@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {useSettings, type Modules} from "@/context/SettingsContext";
 import {NavIcon, type NavIconId} from "@/components/icons/NavIcons";
+import {DomainGridSkeleton} from "@/components/Skeleton";
 
 const domains: {
   key: keyof Modules;
@@ -58,11 +59,22 @@ const domains: {
 const LifeDomains = () => {
   const {modules, isLoading} = useSettings();
 
-  const visible = domains.filter((domain) =>
-    isLoading ? true : modules?.[domain.key]
-  );
+  const visible = domains.filter((domain) => modules?.[domain.key]);
 
-  if (!isLoading && visible.length === 0) {
+  if (isLoading) {
+    return (
+      <section className="mt-rise mt-rise-delay-1">
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="font-display text-2xl tracking-tight sm:text-3xl">
+            To, co MamTo pilnuje.
+          </h2>
+        </div>
+        <DomainGridSkeleton />
+      </section>
+    );
+  }
+
+  if (visible.length === 0) {
     return (
       <section className="mt-rise mt-rise-delay-1 border-y border-[var(--mt-line)] py-8">
         <p className="text-[var(--mt-muted)]">
@@ -91,7 +103,7 @@ const LifeDomains = () => {
         {visible.map((domain, index) => (
           <Link
             key={domain.key}
-            href={isLoading ? "#" : domain.href}
+            href={domain.href}
             className={`group relative px-0 py-7 transition md:px-5 md:first:pl-0 ${
               index < visible.length - 1
                 ? "border-b border-[var(--mt-line)] md:border-b-0 md:border-r"

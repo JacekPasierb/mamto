@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useState} from "react";
 import AppShell from "@/components/dashboard/AppShell";
 import {NavIcon, type NavIconId} from "@/components/icons/NavIcons";
+import {OptionsSkeleton} from "@/components/Skeleton";
 import {Modules, useSettings} from "@/context/SettingsContext";
 
 const moduleRows: {
@@ -83,8 +84,17 @@ const ModuleSettings = () => {
   if (isLoading || !modules) {
     return (
       <AppShell>
-        <div className="flex flex-1 items-center justify-center px-6 py-16">
-          <p className="text-[var(--mt-muted)]">Ładowanie ustawień…</p>
+        <div className="mx-auto w-full max-w-3xl px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
+          <p className="text-[0.65rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-accent)]">
+            Preferencje
+          </p>
+          <h1 className="font-display mt-3 text-4xl tracking-tight">
+            Ustawienia
+          </h1>
+          <p className="mt-3 text-[var(--mt-muted)]">
+            Wybierz, co MamTo ma pilnować za Ciebie.
+          </p>
+          <OptionsSkeleton rows={6} />
         </div>
       </AppShell>
     );
