@@ -3,11 +3,7 @@ import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 
 import {parseCalendarDate, todayCalendarDate} from "@/lib/calculateCurrentStock";
-import {addMonths, enrichPetCare} from "@/lib/petHelpers";
-import {
-  PET_CARE_DEFAULT_INTERVAL_MONTHS,
-  type PetCareType,
-} from "@/lib/petTypes";
+import {enrichPetCare} from "@/lib/petHelpers";
 import {connectDB} from "@/lib/mongodb";
 import PetCare from "@/models/PetCare";
 
@@ -59,15 +55,8 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    const interval =
-      existing.intervalMonths && existing.intervalMonths > 0
-        ? existing.intervalMonths
-        : PET_CARE_DEFAULT_INTERVAL_MONTHS[existing.type as PetCareType] || 6;
-
-    const nextDueAt = addMonths(completedAt, interval);
-
-    // Zamknij bieżący wpis jako wykonany (zostaje w liście jako historia).
-    const closed = await PetCare.findOneAndUpdate(
+    // Tylko wyłącz termin / powiadomienie — kolejne szczepienie użytkownik doda sam.
+    const item = await PetCare.findOneAndUpdate(
       {_id: careId, petId: id, userId},
       {
         lastDoneAt: completedAt,
@@ -76,26 +65,9 @@ export async function POST(request: Request, context: RouteContext) {
       {new: true}
     );
 
-    // Dodaj kolejny wpis z nowym terminem do pilnowania.
-    const next = await PetCare.create({
-      userId,
-      petId: id,
-      name: existing.name,
-      type: existing.type,
-      diseases: existing.diseases || [],
-      providerName: existing.providerName || "",
-      lastDoneAt: completedAt,
-      nextDueAt,
-      intervalMonths: existing.intervalMonths,
-      notes: existing.notes || "",
-    });
-
-    const now = todayCalendarDate();
-
-    return NextResponse.json({
-      closed: enrichPetCare(closed!.toObject(), now),
-      next: enrichPetCare(next.toObject(), now),
-    });
+    return NextResponse.json(
+      enrichPetCare(item!.toObject(), todayCalendarDate())
+    );
   } catch (error) {
     console.error("POST complete pet care error:", error);
 

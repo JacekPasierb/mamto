@@ -279,7 +279,7 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
 
   const handleComplete = async (service: VehicleServiceItem) => {
     const confirmed = window.confirm(
-      `Oznaczyć „${service.title}” jako wykonane? Obecny wpis zostanie w historii, a dodamy kolejny z nowym terminem.`
+      `Oznaczyć „${service.title}” jako wykonane? Wyłączymy powiadomienie — kolejny serwis dodaj sam.`
     );
 
     if (!confirmed) return;

@@ -181,7 +181,7 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
 
   const handleComplete = async (item: PetCareFormValues) => {
     const confirmed = window.confirm(
-      `Oznaczyć „${item.name}” jako wykonane? Obecny wpis zostanie w historii, a dodamy kolejny z nowym terminem.`
+      `Oznaczyć „${item.name}” jako wykonane? Wyłączymy powiadomienie — kolejne szczepienie dodaj sam.`
     );
     if (!confirmed) return;
 
