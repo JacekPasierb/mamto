@@ -427,14 +427,7 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
                           ? ` · ${formatDaysLeft(item.daysUntilDue)}`
                           : ""}
                       </p>
-                    ) : (
-                      <p className="mt-2 text-sm text-[var(--mt-muted)]">
-                        Wykonane
-                        {item.lastDoneAt
-                          ? `: ${formatDate(item.lastDoneAt)}`
-                          : ""}
-                      </p>
-                    )}
+                    ) : null}
 
                     {item.providerName ? (
                       <p className="mt-1 text-sm text-[var(--mt-muted)]">
@@ -442,13 +435,13 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
                       </p>
                     ) : null}
 
-                    {item.nextDueAt && item.lastDoneAt ? (
+                    {item.lastDoneAt ? (
                       <p className="mt-1 text-sm text-[var(--mt-muted)]">
                         Ostatnio: {formatDate(item.lastDoneAt)}
                       </p>
                     ) : null}
 
-                    {item.nextDueAt && formatInterval(item.intervalMonths) ? (
+                    {formatInterval(item.intervalMonths) ? (
                       <p className="mt-1 text-sm text-[var(--mt-ink)]">
                         Cykl: {formatInterval(item.intervalMonths)}
                       </p>
@@ -462,7 +455,7 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
                   </div>
 
                   <div className="flex shrink-0 flex-wrap gap-3">
-                    {item.nextDueAt ? (
+                    {item.nextDueAt && !item.reminderDismissed ? (
                       <button
                         type="button"
                         onClick={() => handleComplete(item)}

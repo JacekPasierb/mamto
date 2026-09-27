@@ -68,6 +68,12 @@ const PetCareSchema = new Schema(
       type: String,
       default: "",
     },
+
+    /** Po „Oznacz wykonane” — bez badge/powiadomienia, daty bez zmian. */
+    reminderDismissed: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

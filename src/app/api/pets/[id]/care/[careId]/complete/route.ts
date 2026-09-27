@@ -45,19 +45,21 @@ export async function POST(_request: Request, context: RouteContext) {
 
     if (!existing.nextDueAt) {
       return NextResponse.json(
-        {message: "Ten wpis jest już zamknięty"},
+        {message: "Brak terminu do oznaczenia"},
         {status: 400}
       );
     }
 
-    // Wyłącz powiadomienie. Data wykonania = wpisany następny termin
-    // (np. 14.12), nie poprzednia data ani wynik z interwału.
+    if (existing.reminderDismissed) {
+      return NextResponse.json(
+        enrichPetCare(existing.toObject(), todayCalendarDate())
+      );
+    }
+
+    // Tylko schowaj „Po terminie” / powiadomienie — daty bez zmian.
     const item = await PetCare.findOneAndUpdate(
       {_id: careId, petId: id, userId},
-      {
-        lastDoneAt: existing.nextDueAt,
-        nextDueAt: null,
-      },
+      {reminderDismissed: true},
       {new: true}
     );
 

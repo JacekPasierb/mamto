@@ -474,6 +474,7 @@ export async function GET() {
     const petCareItems = (await PetCare.find({
       userId,
       nextDueAt: {$ne: null},
+      reminderDismissed: {$ne: true},
     }).lean()) as {
       _id: unknown;
       petId: unknown;

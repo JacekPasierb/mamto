@@ -19,6 +19,7 @@ export type PetCareRecord = {
   nextDueAt?: Date | string | null;
   intervalMonths?: number | null;
   notes?: string;
+  reminderDismissed?: boolean;
 };
 
 export type EnrichedPetCare = PetCareRecord & {
@@ -53,12 +54,14 @@ export function enrichPetCare(
   }
 
   const days = daysUntilDue(item.nextDueAt, asOf);
+  const dismissed = Boolean(item.reminderDismissed);
 
   return {
     ...item,
     daysUntilDue: days,
-    isOverdue: days < 0,
-    isUrgent: days <= PET_CARE_URGENT_DAYS,
+    // Badge „Po terminie” / pilne — wyłączone po „Oznacz wykonane”.
+    isOverdue: !dismissed && days < 0,
+    isUrgent: !dismissed && days <= PET_CARE_URGENT_DAYS,
     isActive: true,
   };
 }

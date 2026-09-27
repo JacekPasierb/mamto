@@ -30,6 +30,7 @@ export type PetCareFormValues = {
   nextDueAt: string | null;
   intervalMonths: number | null;
   notes: string;
+  reminderDismissed?: boolean;
   daysUntilDue?: number | null;
   isOverdue?: boolean;
   isUrgent?: boolean;
