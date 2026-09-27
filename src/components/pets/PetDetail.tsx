@@ -142,20 +142,13 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
             );
 
     return [...list].sort((a, b) => {
-      const aActive = Boolean(a.nextDueAt);
-      const bActive = Boolean(b.nextDueAt);
+      const dateOf = (item: PetCareFormValues) => {
+        if (item.lastDoneAt) return new Date(item.lastDoneAt).getTime();
+        if (item.nextDueAt) return new Date(item.nextDueAt).getTime();
+        return 0;
+      };
 
-      if (aActive && bActive) {
-        return (
-          new Date(a.nextDueAt!).getTime() - new Date(b.nextDueAt!).getTime()
-        );
-      }
-
-      if (aActive !== bActive) return aActive ? -1 : 1;
-
-      const aDone = a.lastDoneAt ? new Date(a.lastDoneAt).getTime() : 0;
-      const bDone = b.lastDoneAt ? new Date(b.lastDoneAt).getTime() : 0;
-      return bDone - aDone;
+      return dateOf(b) - dateOf(a);
     });
   }, [items, activeTab]);
 

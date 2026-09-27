@@ -46,7 +46,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
 
     const items = await PetCare.find({userId, petId: id})
-      .sort({nextDueAt: 1, name: 1})
+      .sort({lastDoneAt: -1, nextDueAt: -1, name: 1})
       .lean();
 
     const now = todayCalendarDate();
