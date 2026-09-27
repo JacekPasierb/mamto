@@ -278,12 +278,6 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
   };
 
   const handleComplete = async (service: VehicleServiceItem) => {
-    const confirmed = window.confirm(
-      `Oznaczyć „${service.title}” jako wykonane? Wyłączymy powiadomienie — kolejny serwis dodaj sam.`
-    );
-
-    if (!confirmed) return;
-
     try {
       setCompletingId(service._id);
 
