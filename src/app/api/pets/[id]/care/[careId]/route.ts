@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 
 import {parseCalendarDate, todayCalendarDate} from "@/lib/calculateCurrentStock";
 import {enrichPetCare} from "@/lib/petHelpers";
+import {resolveMedication} from "@/lib/resolveMedication";
 import {resolvePetVet} from "@/lib/resolvePetVet";
 import {
   PET_CARE_DEFAULT_INTERVAL_MONTHS,
@@ -42,6 +43,8 @@ export async function PUT(request: Request, context: RouteContext) {
       diseases,
       providerName,
       providerVetId,
+      medicationName,
+      medicationId,
       lastDoneAt,
       nextDueAt,
       intervalMonths,
@@ -98,6 +101,11 @@ export async function PUT(request: Request, context: RouteContext) {
       resolvedProviderName = resolvedVet.vetName || resolvedProviderName;
     }
 
+    const resolvedMedication = await resolveMedication(userId, {
+      medicationId,
+      medicationName,
+    });
+
     const item = await PetCare.findOneAndUpdate(
       {_id: careId, petId: id, userId},
       {
@@ -105,6 +113,7 @@ export async function PUT(request: Request, context: RouteContext) {
         type: resolvedType,
         diseases: resolvedDiseases,
         providerName: resolvedProviderName,
+        medicationName: resolvedMedication.medicationName,
         lastDoneAt: lastDoneAt ? parseCalendarDate(lastDoneAt) : null,
         nextDueAt: parseCalendarDate(nextDueAt),
         intervalMonths:

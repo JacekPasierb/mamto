@@ -15,6 +15,7 @@ export type PetCareRecord = {
   type: PetCareType;
   diseases?: InfectiousDisease[];
   providerName?: string;
+  medicationName?: string;
   lastDoneAt?: Date | string | null;
   nextDueAt?: Date | string | null;
   intervalMonths?: number | null;

@@ -19,6 +19,7 @@ import {
   type PetCareFormType,
   type PetCareType,
 } from "@/lib/petTypes";
+import MedicationCombobox from "./MedicationCombobox";
 import VetCombobox from "./VetCombobox";
 
 export type PetCareFormValues = {
@@ -27,6 +28,7 @@ export type PetCareFormValues = {
   type: PetCareType;
   diseases?: InfectiousDisease[];
   providerName: string;
+  medicationName?: string;
   lastDoneAt: string | null;
   nextDueAt: string | null;
   intervalMonths: number | null;
@@ -62,6 +64,8 @@ const PetCareFormModal = ({
   );
   const [providerName, setProviderName] = useState("");
   const [providerVetId, setProviderVetId] = useState<string | null>(null);
+  const [medicationName, setMedicationName] = useState("");
+  const [medicationId, setMedicationId] = useState<string | null>(null);
   const [lastDoneAt, setLastDoneAt] = useState("");
   const [nextDueAt, setNextDueAt] = useState("");
   const [intervalMonths, setIntervalMonths] = useState("12");
@@ -92,6 +96,8 @@ const PetCareFormModal = ({
       );
       setProviderName(item.providerName || "");
       setProviderVetId(null);
+      setMedicationName(item.medicationName || "");
+      setMedicationId(null);
       setLastDoneAt(toDateInputValue(item.lastDoneAt) || "");
       setNextDueAt(toDateInputValue(item.nextDueAt) || "");
       setIntervalMonths(
@@ -109,6 +115,8 @@ const PetCareFormModal = ({
       setDiseases([...INFECTIOUS_DISEASE_DEFAULTS]);
       setProviderName("");
       setProviderVetId(null);
+      setMedicationName("");
+      setMedicationId(null);
       setLastDoneAt("");
       setNextDueAt("");
       setIntervalMonths(String(months));
@@ -192,6 +200,8 @@ const PetCareFormModal = ({
         diseases: type === "infectious" ? diseases : [],
         providerName,
         providerVetId,
+        medicationName,
+        medicationId,
         lastDoneAt: lastDoneAt || null,
         nextDueAt,
         intervalMonths: intervalMonths || null,
@@ -348,9 +358,18 @@ const PetCareFormModal = ({
               setProviderName(nameValue);
               setProviderVetId(idValue);
             }}
-            label="Wet / preparat"
-            placeholder="Klinika, lekarz lub nazwa preparatu"
-            createHint="Klinika: „Dodaj” lub Enter. Preparat: wpisz nazwę i zostaw."
+            label="Klinika / weterynarz"
+            placeholder="Wpisz lub wybierz klinikę"
+            createHint="Wpisz nazwę i wybierz „Dodaj”, albo naciśnij Enter."
+          />
+
+          <MedicationCombobox
+            value={medicationName}
+            medicationId={medicationId}
+            onChange={(nameValue, idValue) => {
+              setMedicationName(nameValue);
+              setMedicationId(idValue);
+            }}
           />
 
           <div className="grid grid-cols-2 gap-4">

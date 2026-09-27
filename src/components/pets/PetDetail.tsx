@@ -426,7 +426,13 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
 
                     {item.providerName ? (
                       <p className="mt-1 text-sm text-[var(--mt-muted)]">
-                        {item.providerName}
+                        Klinika: {item.providerName}
+                      </p>
+                    ) : null}
+
+                    {item.medicationName ? (
+                      <p className="mt-1 text-sm text-[var(--mt-muted)]">
+                        Preparat: {item.medicationName}
                       </p>
                     ) : null}
 

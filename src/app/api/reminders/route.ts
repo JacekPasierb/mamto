@@ -485,6 +485,7 @@ export async function GET() {
       type: PetCareType;
       diseases?: InfectiousDisease[];
       providerName?: string;
+      medicationName?: string;
       nextDueAt: Date;
     }[];
 
@@ -515,6 +516,7 @@ export async function GET() {
           PET_CARE_TYPE_LABELS[normalizePetCareType(care.type)],
           diseasesLabel || null,
           care.providerName || null,
+          care.medicationName || null,
         ]
           .filter(Boolean)
           .join(" · "),

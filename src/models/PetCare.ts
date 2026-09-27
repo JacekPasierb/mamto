@@ -47,6 +47,13 @@ const PetCareSchema = new Schema(
       trim: true,
     },
 
+    /** Preparat / lek (np. Vectra 3D). */
+    medicationName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
     lastDoneAt: {
       type: Date,
       default: null,
