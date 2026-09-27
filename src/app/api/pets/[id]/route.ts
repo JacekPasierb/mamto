@@ -3,6 +3,7 @@ import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 
 import {parseCalendarDate} from "@/lib/calculateCurrentStock";
+import {resolvePetVet} from "@/lib/resolvePetVet";
 import {PET_SPECIES, type PetSpecies} from "@/lib/petTypes";
 import {connectDB} from "@/lib/mongodb";
 import Pet from "@/models/Pet";
@@ -63,8 +64,16 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const body = await request.json();
-    const {name, species, breed, birthDate, microchipId, vetName, notes} =
-      body;
+    const {
+      name,
+      species,
+      breed,
+      birthDate,
+      microchipId,
+      vetName,
+      vetId,
+      notes,
+    } = body;
 
     if (!name?.trim()) {
       return NextResponse.json(
@@ -81,6 +90,8 @@ export async function PUT(request: Request, context: RouteContext) {
 
     await connectDB();
 
+    const resolvedVet = await resolvePetVet(userId, {vetId, vetName});
+
     const pet = await Pet.findOneAndUpdate(
       {_id: id, userId},
       {
@@ -89,7 +100,8 @@ export async function PUT(request: Request, context: RouteContext) {
         breed: breed?.trim() || "",
         birthDate: birthDate ? parseCalendarDate(birthDate) : null,
         microchipId: microchipId?.trim() || "",
-        vetName: vetName?.trim() || "",
+        vetName: resolvedVet.vetName,
+        vetId: resolvedVet.vetId,
         notes: notes?.trim() || "",
       },
       {new: true}

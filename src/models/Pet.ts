@@ -46,6 +46,12 @@ const PetSchema = new Schema(
       trim: true,
     },
 
+    vetId: {
+      type: Schema.Types.ObjectId,
+      ref: "Vet",
+      default: null,
+    },
+
     notes: {
       type: String,
       default: "",

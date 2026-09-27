@@ -8,6 +8,7 @@ import {
   PET_SPECIES_LABELS,
   type PetSpecies,
 } from "@/lib/petTypes";
+import VetCombobox from "./VetCombobox";
 
 export type PetFormValues = {
   _id: string;
@@ -17,6 +18,7 @@ export type PetFormValues = {
   birthDate: string | null;
   microchipId: string;
   vetName: string;
+  vetId?: string | null;
   notes: string;
 };
 
@@ -41,6 +43,7 @@ const PetFormModal = ({
   const [birthDate, setBirthDate] = useState("");
   const [microchipId, setMicrochipId] = useState("");
   const [vetName, setVetName] = useState("");
+  const [vetId, setVetId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -55,6 +58,7 @@ const PetFormModal = ({
       setBirthDate(toDateInputValue(pet.birthDate) || "");
       setMicrochipId(pet.microchipId || "");
       setVetName(pet.vetName || "");
+      setVetId(pet.vetId ? String(pet.vetId) : null);
       setNotes(pet.notes || "");
     } else {
       setName("");
@@ -63,6 +67,7 @@ const PetFormModal = ({
       setBirthDate("");
       setMicrochipId("");
       setVetName("");
+      setVetId(null);
       setNotes("");
     }
 
@@ -85,6 +90,7 @@ const PetFormModal = ({
         birthDate: birthDate || null,
         microchipId,
         vetName,
+        vetId,
         notes,
       };
 
@@ -118,6 +124,7 @@ const PetFormModal = ({
           : null,
         microchipId: saved.microchipId || "",
         vetName: saved.vetName || "",
+        vetId: saved.vetId ? String(saved.vetId) : null,
         notes: saved.notes || "",
       });
       onClose();
@@ -229,17 +236,14 @@ const PetFormModal = ({
             </div>
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-              Weterynarz
-            </label>
-            <input
-              value={vetName}
-              onChange={(e) => setVetName(e.target.value)}
-              placeholder="Klinika / lekarz"
-              className={fieldClass}
-            />
-          </div>
+          <VetCombobox
+            value={vetName}
+            vetId={vetId}
+            onChange={(nameValue, idValue) => {
+              setVetName(nameValue);
+              setVetId(idValue);
+            }}
+          />
 
           <div>
             <label className="mb-2 block text-sm text-[var(--mt-muted)]">

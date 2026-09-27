@@ -28,6 +28,7 @@ export type PetDetailData = {
   birthDate: string | null;
   microchipId: string;
   vetName: string;
+  vetId?: string | null;
   notes: string;
 };
 

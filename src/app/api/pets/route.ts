@@ -2,6 +2,7 @@ import {auth} from "@clerk/nextjs/server";
 import {NextResponse} from "next/server";
 
 import {parseCalendarDate} from "@/lib/calculateCurrentStock";
+import {resolvePetVet} from "@/lib/resolvePetVet";
 import {PET_SPECIES, type PetSpecies} from "@/lib/petTypes";
 import {connectDB} from "@/lib/mongodb";
 import Pet from "@/models/Pet";
@@ -42,8 +43,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const {name, species, breed, birthDate, microchipId, vetName, notes} =
-      body;
+    const {
+      name,
+      species,
+      breed,
+      birthDate,
+      microchipId,
+      vetName,
+      vetId,
+      notes,
+    } = body;
 
     if (!name?.trim()) {
       return NextResponse.json(
@@ -60,6 +69,8 @@ export async function POST(request: Request) {
 
     await connectDB();
 
+    const resolvedVet = await resolvePetVet(userId, {vetId, vetName});
+
     const pet = await Pet.create({
       userId,
       name: name.trim(),
@@ -67,7 +78,8 @@ export async function POST(request: Request) {
       breed: breed?.trim() || "",
       birthDate: birthDate ? parseCalendarDate(birthDate) : null,
       microchipId: microchipId?.trim() || "",
-      vetName: vetName?.trim() || "",
+      vetName: resolvedVet.vetName,
+      vetId: resolvedVet.vetId,
       notes: notes?.trim() || "",
     });
 

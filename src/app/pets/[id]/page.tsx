@@ -48,6 +48,7 @@ export default async function PetPage({params}: PetPageProps) {
             : null,
           microchipId: pet.microchipId || "",
           vetName: pet.vetName || "",
+          vetId: pet.vetId ? String(pet.vetId) : null,
           notes: pet.notes || "",
         }}
       />
