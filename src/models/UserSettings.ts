@@ -34,6 +34,13 @@ const UserSettingsSchema = new Schema(
         default: true,
       },
     },
+
+    notifications: {
+      pushEnabled: {
+        type: Boolean,
+        default: false,
+      },
+    },
   },
   {
     timestamps: true,

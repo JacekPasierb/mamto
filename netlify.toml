@@ -1,0 +1,6 @@
+[build]
+  command = "npm run build"
+
+# Codziennie o 7:00 UTC (~9:00 PL zimą / 8:00 latem) — wywołuje API push.
+[functions."push-urgent-cron"]
+  schedule = "0 7 * * *"

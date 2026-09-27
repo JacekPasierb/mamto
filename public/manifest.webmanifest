@@ -1,0 +1,25 @@
+{
+  "name": "MamTo",
+  "short_name": "MamTo",
+  "description": "Organizer człowieka — pojazdy, polisy, dokumenty, leki i wizyty.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#e8eef1",
+  "theme_color": "#0a6363",
+  "lang": "pl",
+  "icons": [
+    {
+      "src": "/mamto-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/mamto-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

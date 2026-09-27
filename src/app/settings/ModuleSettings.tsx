@@ -5,6 +5,7 @@ import {useState} from "react";
 import AppShell from "@/components/dashboard/AppShell";
 import {NavIcon, type NavIconId} from "@/components/icons/NavIcons";
 import {OptionsSkeleton} from "@/components/Skeleton";
+import PushNotificationsCard from "@/components/settings/PushNotificationsCard";
 import {Modules, useSettings} from "@/context/SettingsContext";
 
 const moduleRows: {
@@ -129,6 +130,8 @@ const ModuleSettings = () => {
             />
           ))}
         </div>
+
+        <PushNotificationsCard />
 
         <div className="mt-12 border-t border-[var(--mt-line)] pt-8">
           <p className="text-[0.65rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-muted)]">
