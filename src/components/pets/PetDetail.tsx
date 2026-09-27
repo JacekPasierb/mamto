@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback, useEffect, useMemo, useState} from "react";
 
+import ConfirmModal from "@/components/ConfirmModal";
 import {toDateInputValue} from "@/lib/calculateCurrentStock";
 import {
   INFECTIOUS_DISEASE_LABELS,
@@ -19,6 +20,10 @@ import PetCareFormModal, {
   type PetCareFormValues,
 } from "./PetCareFormModal";
 import PetFormModal, {type PetFormValues} from "./PetFormModal";
+
+type DeleteTarget =
+  | {kind: "care"; item: PetCareFormValues}
+  | {kind: "pet"};
 
 export type PetDetailData = {
   _id: string;
@@ -78,6 +83,7 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [isDeletingPet, setIsDeletingPet] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
 
   const loadItems = useCallback(async () => {
     const response = await fetch(`/api/pets/${pet._id}/care`, {
@@ -195,33 +201,28 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
     }
   };
 
-  const handleDelete = async (item: PetCareFormValues) => {
-    const confirmed = window.confirm(
-      `Usunąć „${item.name}”? Tej operacji nie da się cofnąć.`
-    );
-    if (!confirmed) return;
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
 
-    try {
-      setDeletingId(item._id);
-      const response = await fetch(
-        `/api/pets/${pet._id}/care/${item._id}`,
-        {method: "DELETE"}
-      );
-      if (!response.ok) throw new Error("Nie udało się usunąć zabiegu");
-      await loadItems();
-    } catch (error) {
-      console.error(error);
-      window.alert("Nie udało się usunąć zabiegu.");
-    } finally {
-      setDeletingId(null);
+    if (deleteTarget.kind === "care") {
+      const item = deleteTarget.item;
+      try {
+        setDeletingId(item._id);
+        const response = await fetch(
+          `/api/pets/${pet._id}/care/${item._id}`,
+          {method: "DELETE"}
+        );
+        if (!response.ok) throw new Error("Nie udało się usunąć zabiegu");
+        setDeleteTarget(null);
+        await loadItems();
+      } catch (error) {
+        console.error(error);
+        window.alert("Nie udało się usunąć zabiegu.");
+      } finally {
+        setDeletingId(null);
+      }
+      return;
     }
-  };
-
-  const handleDeletePet = async () => {
-    const confirmed = window.confirm(
-      `Usunąć zwierzę „${pet.name}” i całą jego opiekę?`
-    );
-    if (!confirmed) return;
 
     try {
       setIsDeletingPet(true);
@@ -229,6 +230,7 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Nie udało się usunąć zwierzęcia");
+      setDeleteTarget(null);
       router.push("/pets");
       router.refresh();
     } catch (error) {
@@ -277,7 +279,7 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
             </button>
             <button
               type="button"
-              onClick={handleDeletePet}
+              onClick={() => setDeleteTarget({kind: "pet"})}
               disabled={isDeletingPet}
               className="text-sm font-medium text-[var(--mt-signal)] underline-offset-4 transition hover:underline disabled:opacity-50"
             >
@@ -480,7 +482,7 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(item)}
+                      onClick={() => setDeleteTarget({kind: "care", item})}
                       disabled={deletingId === item._id}
                       className="text-sm font-medium text-[var(--mt-signal)] underline-offset-4 transition hover:underline disabled:opacity-50"
                     >
@@ -541,6 +543,34 @@ const PetDetail = ({pet: initialPet}: PetDetailProps) => {
           if (saved) setPet(saved);
           router.refresh();
         }}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(deleteTarget)}
+        title={
+          deleteTarget?.kind === "pet"
+            ? "Usunąć zwierzę?"
+            : "Usunąć zabieg?"
+        }
+        description={
+          deleteTarget?.kind === "pet"
+            ? `Zwierzę „${pet.name}” i cała jego opieka zostaną trwale usunięte. Tej operacji nie da się cofnąć.`
+            : deleteTarget?.kind === "care"
+              ? `Wpisu „${deleteTarget.item.name}” nie da się potem przywrócić.`
+              : ""
+        }
+        isLoading={
+          deleteTarget?.kind === "pet"
+            ? isDeletingPet
+            : deleteTarget?.kind === "care"
+              ? deletingId === deleteTarget.item._id
+              : false
+        }
+        onClose={() => {
+          if (isDeletingPet || deletingId) return;
+          setDeleteTarget(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
     </>
   );

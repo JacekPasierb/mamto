@@ -23,6 +23,7 @@ import {
   VehicleServiceIcon,
   type VehicleServiceIconId,
 } from "@/components/icons/VehicleIcons";
+import ConfirmModal from "@/components/ConfirmModal";
 import PolishPlate from "./PolishPlate";
 import ServiceFormModal, {type ServiceFormValues} from "./ServiceFormModal";
 import ServiceMileageTimeline from "./ServiceMileageTimeline";
@@ -43,6 +44,10 @@ export type VehicleDetailData = {
 type VehicleServiceItem = ServiceFormValues & {
   type: ServiceType;
 };
+
+type DeleteTarget =
+  | {kind: "service"; item: VehicleServiceItem}
+  | {kind: "vehicle"};
 
 type ServiceTab = "all" | "nearest" | ServiceGroup;
 
@@ -136,6 +141,7 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [isDeletingVehicle, setIsDeletingVehicle] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
 
   const loadServices = useCallback(async () => {
     const response = await fetch(`/api/vehicles/${vehicle._id}/services`);
@@ -247,33 +253,54 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
     setEditingService(null);
   };
 
-  const handleDelete = async (service: VehicleServiceItem) => {
-    const confirmed = window.confirm(
-      `Usunąć serwis „${service.title}”? Tej operacji nie da się cofnąć.`
-    );
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
 
-    if (!confirmed) return;
+    if (deleteTarget.kind === "service") {
+      const service = deleteTarget.item;
+      try {
+        setDeletingId(service._id);
+
+        const response = await fetch(
+          `/api/vehicles/${vehicle._id}/services/${service._id}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Nie udało się usunąć serwisu");
+        }
+
+        setDeleteTarget(null);
+        await loadServices();
+      } catch (error) {
+        console.error(error);
+        window.alert("Nie udało się usunąć serwisu.");
+      } finally {
+        setDeletingId(null);
+      }
+      return;
+    }
 
     try {
-      setDeletingId(service._id);
+      setIsDeletingVehicle(true);
 
-      const response = await fetch(
-        `/api/vehicles/${vehicle._id}/services/${service._id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`/api/vehicles/${vehicle._id}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
-        throw new Error("Nie udało się usunąć serwisu");
+        throw new Error("Nie udało się usunąć pojazdu");
       }
 
-      await loadServices();
+      setDeleteTarget(null);
+      router.push("/vehicles");
+      router.refresh();
     } catch (error) {
       console.error(error);
-      window.alert("Nie udało się usunąć serwisu.");
-    } finally {
-      setDeletingId(null);
+      window.alert("Nie udało się usunąć pojazdu.");
+      setIsDeletingVehicle(false);
     }
   };
 
@@ -309,33 +336,6 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
     setVehicle(saved);
     setMileage(saved.mileage);
     await loadServices();
-  };
-
-  const handleDeleteVehicle = async () => {
-    const confirmed = window.confirm(
-      `Usunąć pojazd „${vehicle.name}” wraz z historią serwisową? Tej operacji nie da się cofnąć.`
-    );
-
-    if (!confirmed) return;
-
-    try {
-      setIsDeletingVehicle(true);
-
-      const response = await fetch(`/api/vehicles/${vehicle._id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Nie udało się usunąć pojazdu");
-      }
-
-      router.push("/vehicles");
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      window.alert("Nie udało się usunąć pojazdu.");
-      setIsDeletingVehicle(false);
-    }
   };
 
   const typeLabel =
@@ -398,7 +398,7 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
             </button>
             <button
               type="button"
-              onClick={handleDeleteVehicle}
+              onClick={() => setDeleteTarget({kind: "vehicle"})}
               disabled={isDeletingVehicle}
               className="text-sm font-medium text-[var(--mt-signal)] underline-offset-4 transition hover:underline disabled:opacity-50"
             >
@@ -679,7 +679,9 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(service)}
+                      onClick={() =>
+                        setDeleteTarget({kind: "service", item: service})
+                      }
                       disabled={deletingId === service._id}
                       className="text-sm font-medium text-[var(--mt-signal)] underline-offset-4 transition hover:underline disabled:opacity-50"
                     >
@@ -749,6 +751,34 @@ const VehicleDetail = ({vehicle: initialVehicle}: VehicleDetailProps) => {
         vehicle={vehicle}
         onClose={() => setIsVehicleModalOpen(false)}
         onSaved={handleVehicleSaved}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(deleteTarget)}
+        title={
+          deleteTarget?.kind === "vehicle"
+            ? "Usunąć pojazd?"
+            : "Usunąć serwis?"
+        }
+        description={
+          deleteTarget?.kind === "vehicle"
+            ? `Pojazd „${vehicle.name}” wraz z historią serwisową zostanie trwale usunięty. Tej operacji nie da się cofnąć.`
+            : deleteTarget?.kind === "service"
+              ? `Serwis „${deleteTarget.item.title}” zostanie trwale usunięty. Tej operacji nie da się cofnąć.`
+              : ""
+        }
+        isLoading={
+          deleteTarget?.kind === "vehicle"
+            ? isDeletingVehicle
+            : deleteTarget?.kind === "service"
+              ? deletingId === deleteTarget.item._id
+              : false
+        }
+        onClose={() => {
+          if (isDeletingVehicle || deletingId) return;
+          setDeleteTarget(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
     </>
   );

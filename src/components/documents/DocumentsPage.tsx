@@ -3,6 +3,7 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
 
 import AppShell from "@/components/dashboard/AppShell";
+import ConfirmModal from "@/components/ConfirmModal";
 import {toDateInputValue} from "@/lib/calculateCurrentStock";
 import {
   DOCUMENT_FORM_TYPES,
@@ -51,6 +52,7 @@ const DocumentsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DocumentItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<DocumentItem | null>(null);
 
   const loadItems = useCallback(async () => {
     const response = await fetch("/api/documents", {cache: "no-store"});
@@ -151,17 +153,13 @@ const DocumentsPage = () => {
     setEditingItem(null);
   };
 
-  const handleDelete = async (item: DocumentItem) => {
-    const confirmed = window.confirm(
-      `Usunąć dokument „${item.name}”? Tej operacji nie da się cofnąć.`
-    );
-
-    if (!confirmed) return;
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete) return;
 
     try {
-      setDeletingId(item._id);
+      setDeletingId(pendingDelete._id);
 
-      const response = await fetch(`/api/documents/${item._id}`, {
+      const response = await fetch(`/api/documents/${pendingDelete._id}`, {
         method: "DELETE",
       });
 
@@ -169,6 +167,7 @@ const DocumentsPage = () => {
         throw new Error("Nie udało się usunąć dokumentu");
       }
 
+      setPendingDelete(null);
       await loadItems();
     } catch (error) {
       console.error(error);
@@ -330,7 +329,7 @@ const DocumentsPage = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(item)}
+                      onClick={() => setPendingDelete(item)}
                       disabled={deletingId === item._id}
                       className="text-sm font-medium text-[var(--mt-signal)] underline-offset-4 transition hover:underline disabled:opacity-50"
                     >
@@ -382,6 +381,22 @@ const DocumentsPage = () => {
         item={editingItem}
         onClose={closeModal}
         onSaved={loadItems}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(pendingDelete)}
+        title="Usunąć dokument?"
+        description={
+          pendingDelete
+            ? `Dokument „${pendingDelete.name}” zostanie trwale usunięty. Tej operacji nie da się cofnąć.`
+            : ""
+        }
+        isLoading={Boolean(pendingDelete && deletingId === pendingDelete._id)}
+        onClose={() => {
+          if (deletingId) return;
+          setPendingDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
     </AppShell>
   );

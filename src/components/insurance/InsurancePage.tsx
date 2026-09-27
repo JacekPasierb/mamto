@@ -3,6 +3,7 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
 
 import AppShell from "@/components/dashboard/AppShell";
+import ConfirmModal from "@/components/ConfirmModal";
 import {toDateInputValue} from "@/lib/calculateCurrentStock";
 import {
   INSURANCE_FORM_TYPES,
@@ -58,6 +59,9 @@ const InsurancePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InsuranceItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<InsuranceItem | null>(
+    null
+  );
 
   const loadItems = useCallback(async () => {
     const response = await fetch("/api/insurance", {cache: "no-store"});
@@ -177,17 +181,13 @@ const InsurancePage = () => {
     setEditingItem(null);
   };
 
-  const handleDelete = async (item: InsuranceItem) => {
-    const confirmed = window.confirm(
-      `Usunąć polisę „${item.name}”? Tej operacji nie da się cofnąć.`
-    );
-
-    if (!confirmed) return;
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete) return;
 
     try {
-      setDeletingId(item._id);
+      setDeletingId(pendingDelete._id);
 
-      const response = await fetch(`/api/insurance/${item._id}`, {
+      const response = await fetch(`/api/insurance/${pendingDelete._id}`, {
         method: "DELETE",
       });
 
@@ -195,6 +195,7 @@ const InsurancePage = () => {
         throw new Error("Nie udało się usunąć polisy");
       }
 
+      setPendingDelete(null);
       await loadItems();
     } catch (error) {
       console.error(error);
@@ -364,7 +365,7 @@ const InsurancePage = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(item)}
+                      onClick={() => setPendingDelete(item)}
                       disabled={deletingId === item._id}
                       className="text-sm font-medium text-[var(--mt-signal)] underline-offset-4 transition hover:underline disabled:opacity-50"
                     >
@@ -417,6 +418,22 @@ const InsurancePage = () => {
         vehicles={vehicles}
         onClose={closeModal}
         onSaved={loadItems}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(pendingDelete)}
+        title="Usunąć polisę?"
+        description={
+          pendingDelete
+            ? `Polisa „${pendingDelete.name}” zostanie trwale usunięta. Tej operacji nie da się cofnąć.`
+            : ""
+        }
+        isLoading={Boolean(pendingDelete && deletingId === pendingDelete._id)}
+        onClose={() => {
+          if (deletingId) return;
+          setPendingDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
     </AppShell>
   );
