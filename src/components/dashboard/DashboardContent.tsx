@@ -9,6 +9,7 @@ import DashboardHeader from "./DashboardHeader";
 import LifeDomains from "./LifeDomains";
 import QuickAddCard from "./QuickAddCard";
 import QuickAddModal from "./QuickAddModal";
+import MobileQuickAddFab from "./MobileQuickAddFab";
 import ReminderSection, {type ReminderListItem} from "./ReminderSection";
 import {IconActionField} from "@/components/icons/AttentionIcons";
 
@@ -123,6 +124,8 @@ const DashboardContent = () => {
         </div>
 
         <QuickAddCard onAddClick={() => setIsQuickAddOpen(true)} />
+
+        <MobileQuickAddFab onClick={() => setIsQuickAddOpen(true)} />
 
         <div className="mt-rise mt-rise-delay-3 mt-12">
           <div className="flex flex-wrap items-end justify-between gap-4">

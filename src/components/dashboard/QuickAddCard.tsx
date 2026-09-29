@@ -4,7 +4,7 @@ type QuickAddCardProps = {
 
 const QuickAddCard = ({onAddClick}: QuickAddCardProps) => {
   return (
-    <section className="mt-rise mt-rise-delay-2 flex flex-col gap-5 border-b border-[var(--mt-line)] py-9 sm:flex-row sm:items-center sm:justify-between">
+    <section className="mt-rise mt-rise-delay-2 hidden flex-col gap-5 border-b border-[var(--mt-line)] py-9 lg:flex lg:flex-row lg:items-center lg:justify-between">
       <div>
         <p className="text-[0.62rem] font-medium uppercase tracking-[0.28em] text-[var(--mt-muted)]">
           Szybka akcja
