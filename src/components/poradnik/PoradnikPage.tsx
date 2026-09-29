@@ -108,8 +108,8 @@ const PoradnikPage = () => {
           lead="Po instalacji MamTo otwiera się jak aplikacja — pełny ekran, ikona na telefonie. To potrzebne zwłaszcza na iPhonie przy powiadomieniach."
           steps={[
             {
-              title: "iPhone (Safari)",
-              body: "Otwórz mam-to.netlify.app w Safari (nie w Chrome). Zaloguj się. Na dole ekranu kliknij ikonę Udostępnij (kwadrat ze strzałką w górę).",
+              title: "iPhone (Safari / Chrome)",
+              body: "Otwórz mam-to.netlify.app w Safari lub Chrome. Zaloguj się. Na dole ekranu kliknij ikonę Udostępnij (kwadrat ze strzałką w górę).",
             },
             {
               title: "Do ekranu początkowego",
@@ -117,7 +117,7 @@ const PoradnikPage = () => {
             },
             {
               title: "Otwieraj z ikony",
-              body: "Od teraz korzystaj z MamTo przez ikonę na ekranie początkowym — nie z karty w Safari. Tak działa tryb aplikacji.",
+              body: "Od teraz korzystaj z MamTo przez ikonę na ekranie początkowym — nie z karty w przeglądarce. Tak działa tryb aplikacji.",
             },
             {
               title: "Android (Chrome)",
@@ -128,7 +128,7 @@ const PoradnikPage = () => {
               body: "Po instalacji MamTo pojawi się wśród aplikacji. Otwieraj je stamtąd — wygląda i działa jak zwykła apka.",
             },
           ]}
-          tip="Na iPhonie instalacja działa najpewniej w Safari. Na Androidzie najlepiej Chrome."
+          tip="Na iPhonie instalacja działa najpewniej z Safari. Na Androidzie najlepiej Chrome."
         />
 
         <GuideBlock
