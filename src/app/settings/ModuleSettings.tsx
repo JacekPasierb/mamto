@@ -135,6 +135,21 @@ const ModuleSettings = () => {
 
         <div className="mt-12 border-t border-[var(--mt-line)] pt-8">
           <p className="text-[0.65rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-muted)]">
+            Pomoc
+          </p>
+          <p className="mt-3 max-w-xl text-sm text-[var(--mt-muted)]">
+            Jak dodać MamTo do telefonu i włączyć powiadomienia — krok po kroku.
+          </p>
+          <Link
+            href="/poradnik"
+            className="mt-4 inline-flex text-sm font-medium text-[var(--mt-accent)] underline-offset-4 hover:underline"
+          >
+            Otwórz poradnik →
+          </Link>
+        </div>
+
+        <div className="mt-12 border-t border-[var(--mt-line)] pt-8">
+          <p className="text-[0.65rem] font-medium uppercase tracking-[0.24em] text-[var(--mt-muted)]">
             Dokumenty prawne
           </p>
           <nav className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">

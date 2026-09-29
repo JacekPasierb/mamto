@@ -326,6 +326,45 @@ export const IconPets = ({active, className, ...props}: GlyphProps) => (
   </svg>
 );
 
+/** Poradnik — otwarta książka ze wskaźnikiem kroku. */
+export const IconGuide = ({active, className, ...props}: GlyphProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    className={base(active, className)}
+    aria-hidden
+    {...props}
+  >
+    <path
+      d="M4.5 5.5h6.2c1.2 0 2.3.6 3 1.6.7-1 1.8-1.6 3-1.6h6.3v13.2h-6.3c-1.2 0-2.3.4-3 1.2-.7-.8-1.8-1.2-3-1.2H4.5V5.5Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="miter"
+    />
+    <path
+      d="M13.7 7.4v11.2"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="square"
+      opacity="0.55"
+    />
+    <path
+      d="M6.8 9.2h4M6.8 12h4M6.8 14.8h2.8"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="square"
+      opacity="0.55"
+    />
+    <circle
+      className="mt-icon-accent"
+      cx="17.6"
+      cy="12"
+      r="1.4"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 export type NavIconId =
   | "dashboard"
   | "vehicles"
@@ -334,7 +373,8 @@ export type NavIconId =
   | "visits"
   | "pets"
   | "stock"
-  | "settings";
+  | "settings"
+  | "guide";
 
 const map = {
   dashboard: IconDashboard,
@@ -345,6 +385,7 @@ const map = {
   pets: IconPets,
   stock: IconStock,
   settings: IconSettings,
+  guide: IconGuide,
 } as const;
 
 type NavIconProps = GlyphProps & {

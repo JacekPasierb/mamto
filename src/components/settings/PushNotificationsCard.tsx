@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {useCallback, useEffect, useState} from "react";
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -190,7 +191,13 @@ const PushNotificationsCard = () => {
           ) : null}
           {status?.supportedHint && permission !== "unsupported" ? (
             <p className="mt-2 text-xs text-[var(--mt-muted)]">
-              {status.supportedHint}
+              {status.supportedHint}{" "}
+              <Link
+                href="/poradnik#powiadomienia"
+                className="text-[var(--mt-accent)] underline-offset-4 hover:underline"
+              >
+                Zobacz poradnik
+              </Link>
             </p>
           ) : null}
           {info ? (

@@ -70,6 +70,12 @@ const links: NavLink[] = [
     hint: "Preferencje konta",
     icon: "settings",
   },
+  {
+    href: "/poradnik",
+    label: "Poradnik",
+    hint: "Instalacja i powiadomienia",
+    icon: "guide",
+  },
 ];
 
 const NavSkeleton = ({variant}: {variant: "rail" | "chip"}) => {
