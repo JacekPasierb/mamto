@@ -155,7 +155,7 @@ const DashboardSidebar = () => {
         aria-busy={isLoading || undefined}
         aria-label="Nawigacja"
       >
-        <div className="flex gap-1 overflow-x-auto px-2 pt-2 pb-2">
+        <div className="flex gap-1 overflow-x-auto px-2 pt-3 pb-3">
           {isLoading ? (
             <NavSkeleton variant="chip" />
           ) : (
@@ -169,7 +169,7 @@ const DashboardSidebar = () => {
                   key={link.href}
                   href={link.href}
                   data-active={isActive}
-                  className={`mt-nav-chip relative flex shrink-0 flex-col items-center gap-1 px-3 py-2 text-[0.7rem] transition ${
+                  className={`mt-nav-chip relative flex shrink-0 flex-col items-center gap-1.5 px-3 py-2.5 text-[0.7rem] transition ${
                     isActive
                       ? "font-medium text-[var(--mt-ink)]"
                       : "text-[var(--mt-muted)]"
