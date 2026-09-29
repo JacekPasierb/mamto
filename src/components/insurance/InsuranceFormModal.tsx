@@ -1,8 +1,6 @@
 "use client";
 
 import {useEffect, useState} from "react";
-
-import FormModalShell from "@/components/FormModalShell";
 import {toDateInputValue} from "@/lib/calculateCurrentStock";
 import {
   INSURANCE_FORM_TYPES,
@@ -99,6 +97,8 @@ const InsuranceFormModal = ({
     setError("");
   }, [isOpen, item]);
 
+  if (!isOpen) return null;
+
   const showVehicleField = isVehicleInsurance(type);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -160,192 +160,211 @@ const InsuranceFormModal = ({
     "box-border w-full min-w-0 max-w-full border border-[var(--mt-line)] bg-[var(--mt-bg)] px-3 py-3 outline-none transition focus:border-[var(--mt-accent)] sm:px-4";
 
   return (
-    <FormModalShell
-      isOpen={isOpen}
-      eyebrow="Ubezpieczenia"
-      title={isEditing ? "Edytuj polisę" : "Dodaj polisę"}
-      onClose={onClose}
-      onSubmit={handleSubmit}
-      footer={
-        <div className="flex gap-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--mt-ink)]/40 px-3 backdrop-blur-sm sm:px-4">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-x-hidden overflow-y-auto border border-[var(--mt-line)] bg-white p-5 shadow-sm sm:p-7">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[var(--mt-muted)]">
+              Ubezpieczenia
+            </p>
+            <h2 className="font-display mt-1 text-2xl tracking-tight">
+              {isEditing ? "Edytuj polisę" : "Dodaj polisę"}
+            </h2>
+          </div>
+
           <button
             type="button"
             onClick={onClose}
-            disabled={isSaving}
-            className="flex-1 border border-[var(--mt-line)] px-4 py-3.5 text-sm font-semibold text-[var(--mt-ink)] transition hover:border-[var(--mt-ink)] disabled:opacity-50"
+            className="shrink-0 text-2xl leading-none text-[var(--mt-muted)] transition hover:text-[var(--mt-ink)]"
+            aria-label="Zamknij"
           >
-            Anuluj
-          </button>
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="flex-1 bg-[var(--mt-ink)] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--mt-accent)] disabled:opacity-50"
-          >
-            {isSaving
-              ? "Zapisywanie…"
-              : isEditing
-                ? "Zapisz zmiany"
-                : "Dodaj polisę"}
+            ×
           </button>
         </div>
-      }
-    >
-      <div>
-        <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-          Nazwa
-        </label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Np. OC samochodu / mieszkanie na Wilanowie"
-          required
-          className={fieldClass}
-        />
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <div>
+            <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+              Nazwa
+            </label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Np. OC samochodu / mieszkanie na Wilanowie"
+              required
+              className={fieldClass}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                Typ
+              </label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as InsuranceType)}
+                className={fieldClass}
+              >
+                {INSURANCE_FORM_TYPES.map((value) => (
+                  <option key={value} value={value}>
+                    {INSURANCE_TYPE_LABELS[value]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                Ubezpieczyciel
+              </label>
+              <input
+                value={insurer}
+                onChange={(e) => setInsurer(e.target.value)}
+                placeholder="Np. PZU"
+                className={fieldClass}
+              />
+            </div>
+          </div>
+
+          {showVehicleField && vehicles.length > 0 ? (
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                Pojazd
+              </label>
+              <select
+                value={vehicleId}
+                onChange={(e) => setVehicleId(e.target.value)}
+                className={fieldClass}
+              >
+                <option value="">Bez powiązania</option>
+                {vehicles.map((vehicle) => (
+                  <option key={vehicle._id} value={vehicle._id}>
+                    {vehicle.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+
+          <div className="min-w-0">
+            <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+              Numer polisy
+            </label>
+            <input
+              value={policyNumber}
+              onChange={(e) => setPolicyNumber(e.target.value)}
+              placeholder="Opcjonalnie"
+              className={fieldClass}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="min-w-0 overflow-hidden">
+              <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                Początek
+              </label>
+              <input
+                type="date"
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+                className={`${fieldClass} mt-date-input`}
+              />
+            </div>
+
+            <div className="min-w-0 overflow-hidden">
+              <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                Koniec
+              </label>
+              <input
+                type="date"
+                value={endsAt}
+                onChange={(e) => setEndsAt(e.target.value)}
+                required
+                className={`${fieldClass} mt-date-input`}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                Składka (zł)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={premium}
+                onChange={(e) => setPremium(e.target.value)}
+                placeholder="Opcjonalnie"
+                className={fieldClass}
+              />
+            </div>
+
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+                Płatność
+              </label>
+              <select
+                value={paymentFrequency}
+                onChange={(e) =>
+                  setPaymentFrequency(
+                    e.target.value as InsurancePaymentFrequency
+                  )
+                }
+                className={fieldClass}
+              >
+                {INSURANCE_PAYMENT_FREQUENCIES.map((value) => (
+                  <option key={value} value={value}>
+                    {INSURANCE_PAYMENT_LABELS[value]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm text-[var(--mt-muted)]">
+              Notatki
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              placeholder="Zakres, franszyza, uwagi…"
+              className={`${fieldClass} resize-y`}
+            />
+          </div>
+
+          {error ? (
+            <p className="text-sm text-[var(--mt-signal)]">{error}</p>
+          ) : null}
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSaving}
+              className="flex-1 border border-[var(--mt-line)] px-4 py-3.5 text-sm font-semibold text-[var(--mt-ink)] transition hover:border-[var(--mt-ink)] disabled:opacity-50"
+            >
+              Anuluj
+            </button>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="flex-1 bg-[var(--mt-ink)] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--mt-accent)] disabled:opacity-50"
+            >
+              {isSaving
+                ? "Zapisywanie…"
+                : isEditing
+                  ? "Zapisz zmiany"
+                  : "Dodaj polisę"}
+            </button>
+          </div>
+        </form>
       </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="min-w-0">
-          <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-            Typ
-          </label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as InsuranceType)}
-            className={fieldClass}
-          >
-            {INSURANCE_FORM_TYPES.map((value) => (
-              <option key={value} value={value}>
-                {INSURANCE_TYPE_LABELS[value]}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="min-w-0">
-          <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-            Ubezpieczyciel
-          </label>
-          <input
-            value={insurer}
-            onChange={(e) => setInsurer(e.target.value)}
-            placeholder="Np. PZU"
-            className={fieldClass}
-          />
-        </div>
-      </div>
-
-      {showVehicleField && vehicles.length > 0 ? (
-        <div className="min-w-0">
-          <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-            Pojazd
-          </label>
-          <select
-            value={vehicleId}
-            onChange={(e) => setVehicleId(e.target.value)}
-            className={fieldClass}
-          >
-            <option value="">Bez powiązania</option>
-            {vehicles.map((vehicle) => (
-              <option key={vehicle._id} value={vehicle._id}>
-                {vehicle.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      ) : null}
-
-      <div className="min-w-0">
-        <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-          Numer polisy
-        </label>
-        <input
-          value={policyNumber}
-          onChange={(e) => setPolicyNumber(e.target.value)}
-          placeholder="Opcjonalnie"
-          className={fieldClass}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="min-w-0 overflow-hidden">
-          <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-            Początek
-          </label>
-          <input
-            type="date"
-            value={startsAt}
-            onChange={(e) => setStartsAt(e.target.value)}
-            className={`${fieldClass} mt-date-input`}
-          />
-        </div>
-
-        <div className="min-w-0 overflow-hidden">
-          <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-            Koniec
-          </label>
-          <input
-            type="date"
-            value={endsAt}
-            onChange={(e) => setEndsAt(e.target.value)}
-            required
-            className={`${fieldClass} mt-date-input`}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="min-w-0">
-          <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-            Składka (zł)
-          </label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={premium}
-            onChange={(e) => setPremium(e.target.value)}
-            placeholder="Opcjonalnie"
-            className={fieldClass}
-          />
-        </div>
-
-        <div className="min-w-0">
-          <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-            Płatność
-          </label>
-          <select
-            value={paymentFrequency}
-            onChange={(e) =>
-              setPaymentFrequency(e.target.value as InsurancePaymentFrequency)
-            }
-            className={fieldClass}
-          >
-            {INSURANCE_PAYMENT_FREQUENCIES.map((value) => (
-              <option key={value} value={value}>
-                {INSURANCE_PAYMENT_LABELS[value]}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label className="mb-2 block text-sm text-[var(--mt-muted)]">
-          Notatki
-        </label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          placeholder="Zakres, franszyza, uwagi…"
-          className={`${fieldClass} resize-y`}
-        />
-      </div>
-
-      {error ? (
-        <p className="text-sm text-[var(--mt-signal)]">{error}</p>
-      ) : null}
-    </FormModalShell>
+    </div>
   );
 };
 
