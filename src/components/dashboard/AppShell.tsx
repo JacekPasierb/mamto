@@ -15,7 +15,7 @@ const AppShell = ({children}: AppShellProps) => {
         <div className="flex min-w-0 flex-1 flex-col p-0 lg:p-4 lg:pl-0">
           <main className="mt-stage relative flex min-h-0 flex-1 flex-col overflow-hidden lg:min-h-[calc(100vh-2rem)] lg:rounded-sm">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--mt-accent)]/35 to-transparent" />
-            <div className="relative flex min-h-full flex-1 flex-col">
+            <div className="relative z-[1] flex min-h-full flex-1 flex-col">
               {children}
             </div>
           </main>

@@ -75,12 +75,23 @@ body {
 }
 
 .mt-stage {
+  /* blur na ::before — nie na samym stage: backdrop-filter tworzy
+     containing block dla position:fixed i modal ląduje „w środku strony”. */
+  position: relative;
   background: var(--mt-stage);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.7) inset,
     0 20px 50px -36px rgba(16, 20, 26, 0.28);
+}
+
+.mt-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 @keyframes mt-rise {

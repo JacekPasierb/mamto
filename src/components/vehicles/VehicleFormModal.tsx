@@ -2,6 +2,7 @@
 
 import {useEffect, useState} from "react";
 
+import ModalPortal from "@/components/ModalPortal";
 import {
   VehicleKindIcon,
   type VehicleKindIconId,
@@ -151,6 +152,7 @@ const VehicleFormModal = ({
     "w-full border border-[var(--mt-line)] bg-[var(--mt-bg)] px-4 py-3 outline-none transition focus:border-[var(--mt-accent)]";
 
   return (
+    <ModalPortal>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--mt-ink)]/40 px-4 backdrop-blur-sm">
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto border border-[var(--mt-line)] bg-white p-7 shadow-sm">
         <div className="flex items-center justify-between">
@@ -342,6 +344,7 @@ const VehicleFormModal = ({
         </form>
       </div>
     </div>
+    </ModalPortal>
   );
 };
 

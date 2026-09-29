@@ -1,6 +1,8 @@
 "use client";
 
 import {useEffect, useState} from "react";
+
+import ModalPortal from "@/components/ModalPortal";
 import {toDateInputValue} from "@/lib/calculateCurrentStock";
 import {
   INSURANCE_FORM_TYPES,
@@ -160,6 +162,7 @@ const InsuranceFormModal = ({
     "box-border w-full min-w-0 max-w-full border border-[var(--mt-line)] bg-[var(--mt-bg)] px-3 py-3 outline-none transition focus:border-[var(--mt-accent)] sm:px-4";
 
   return (
+    <ModalPortal>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--mt-ink)]/40 px-3 backdrop-blur-sm sm:px-4">
       <div className="max-h-[90vh] w-full max-w-lg overflow-x-hidden overflow-y-auto border border-[var(--mt-line)] bg-white p-5 shadow-sm sm:p-7">
         <div className="flex items-center justify-between gap-3">
@@ -365,6 +368,7 @@ const InsuranceFormModal = ({
         </form>
       </div>
     </div>
+    </ModalPortal>
   );
 };
 

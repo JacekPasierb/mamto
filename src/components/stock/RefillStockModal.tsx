@@ -2,6 +2,7 @@
 
 import {useEffect, useState} from "react";
 
+import ModalPortal from "@/components/ModalPortal";
 import type {UsageMode} from "@/lib/stockTypes";
 
 type RefillStockModalProps = {
@@ -84,6 +85,7 @@ const RefillStockModal = ({
     "w-full border border-[var(--mt-line)] bg-[var(--mt-bg)] px-4 py-3 outline-none transition focus:border-[var(--mt-accent)]";
 
   return (
+    <ModalPortal>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--mt-ink)]/40 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md border border-[var(--mt-line)] bg-white p-7 shadow-sm">
         <div className="flex items-center justify-between">
@@ -142,6 +144,7 @@ const RefillStockModal = ({
         </form>
       </div>
     </div>
+    </ModalPortal>
   );
 };
 

@@ -3,6 +3,7 @@
 import {useEffect, useMemo, useState} from "react";
 import {useRouter} from "next/navigation";
 
+import ModalPortal from "@/components/ModalPortal";
 import {NavIcon, type NavIconId} from "@/components/icons/NavIcons";
 import InsuranceFormModal from "@/components/insurance/InsuranceFormModal";
 import DocumentFormModal from "@/components/documents/DocumentFormModal";
@@ -197,6 +198,7 @@ const QuickAddModal = ({isOpen, onClose, onSaved}: QuickAddModalProps) => {
   }
 
   return (
+    <ModalPortal>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--mt-ink)]/40 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md border border-[var(--mt-line)] bg-white p-7 shadow-sm">
         <div className="flex items-start justify-between gap-4">
@@ -261,6 +263,7 @@ const QuickAddModal = ({isOpen, onClose, onSaved}: QuickAddModalProps) => {
         </button>
       </div>
     </div>
+    </ModalPortal>
   );
 };
 

@@ -1,5 +1,7 @@
 "use client";
 
+import ModalPortal from "@/components/ModalPortal";
+
 type ConfirmModalProps = {
   isOpen: boolean;
   title: string;
@@ -24,6 +26,7 @@ const ConfirmModal = ({
   if (!isOpen) return null;
 
   return (
+    <ModalPortal>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--mt-ink)]/40 px-4 backdrop-blur-sm"
       role="dialog"
@@ -78,6 +81,7 @@ const ConfirmModal = ({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 };
 
