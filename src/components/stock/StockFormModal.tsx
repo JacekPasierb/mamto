@@ -1,6 +1,8 @@
 "use client";
 
 import {useEffect, useState} from "react";
+
+import FormModalShell from "@/components/FormModalShell";
 import {
   STOCK_CATEGORIES,
   STOCK_CATEGORY_LABELS,
@@ -108,8 +110,6 @@ const StockFormModal = ({
     setError("");
   }, [isOpen, item]);
 
-  if (!isOpen) return null;
-
   const showDailyFields = category === "medicine" && isDailyMedicine;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -178,32 +178,39 @@ const StockFormModal = ({
   };
 
   const fieldClass =
-    "w-full border border-[var(--mt-line)] bg-[var(--mt-bg)] px-4 py-3 outline-none transition focus:border-[var(--mt-accent)]";
+    "w-full min-w-0 border border-[var(--mt-line)] bg-[var(--mt-bg)] px-3 py-3 outline-none transition focus:border-[var(--mt-accent)] sm:px-4";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--mt-ink)]/40 px-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto border border-[var(--mt-line)] bg-white p-7 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[var(--mt-muted)]">
-              Zapasy
-            </p>
-            <h2 className="font-display mt-1 text-2xl tracking-tight">
-              {isEditing ? "Edytuj zapas" : "Dodaj zapas"}
-            </h2>
-          </div>
-
+    <FormModalShell
+      isOpen={isOpen}
+      eyebrow="Zapasy"
+      title={isEditing ? "Edytuj zapas" : "Dodaj zapas"}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      footer={
+        <div className="flex gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="text-2xl leading-none text-[var(--mt-muted)] transition hover:text-[var(--mt-ink)]"
-            aria-label="Zamknij"
+            disabled={isSaving}
+            className="flex-1 border border-[var(--mt-line)] px-4 py-3.5 text-sm font-semibold text-[var(--mt-ink)] transition hover:border-[var(--mt-ink)] disabled:opacity-50"
           >
-            ×
+            Anuluj
+          </button>
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="flex-1 bg-[var(--mt-ink)] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--mt-accent)] disabled:opacity-50"
+          >
+            {isSaving
+              ? "Zapisywanie…"
+              : isEditing
+                ? "Zapisz zmiany"
+                : "Dodaj zapas"}
           </button>
         </div>
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+      }
+    >
           <div>
             <label className="mb-2 block text-sm text-[var(--mt-muted)]">
               Nazwa
@@ -248,8 +255,8 @@ const StockFormModal = ({
 
           {showDailyFields ? (
             <>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="min-w-0">
                   <label className="mb-2 block text-sm text-[var(--mt-muted)]">
                     Stan początkowy
                   </label>
@@ -264,7 +271,7 @@ const StockFormModal = ({
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <label className="mb-2 block text-sm text-[var(--mt-muted)]">
                     Data stanu
                   </label>
@@ -278,8 +285,8 @@ const StockFormModal = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="min-w-0">
                   <label className="mb-2 block text-sm text-[var(--mt-muted)]">
                     Zużycie dzienne
                   </label>
@@ -294,7 +301,7 @@ const StockFormModal = ({
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <label className="mb-2 block text-sm text-[var(--mt-muted)]">
                     Próg przypomnienia
                   </label>
@@ -388,34 +395,10 @@ const StockFormModal = ({
             />
           </div>
 
-          {error ? (
-            <p className="text-sm text-[var(--mt-signal)]">{error}</p>
-          ) : null}
-
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSaving}
-              className="flex-1 border border-[var(--mt-line)] px-4 py-3.5 text-sm font-semibold text-[var(--mt-ink)] transition hover:border-[var(--mt-ink)] disabled:opacity-50"
-            >
-              Anuluj
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="flex-1 bg-[var(--mt-ink)] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--mt-accent)] disabled:opacity-50"
-            >
-              {isSaving
-                ? "Zapisywanie…"
-                : isEditing
-                  ? "Zapisz zmiany"
-                  : "Dodaj zapas"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      {error ? (
+        <p className="text-sm text-[var(--mt-signal)]">{error}</p>
+      ) : null}
+    </FormModalShell>
   );
 };
 

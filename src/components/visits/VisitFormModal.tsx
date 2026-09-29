@@ -2,6 +2,7 @@
 
 import {useEffect, useState} from "react";
 
+import FormModalShell from "@/components/FormModalShell";
 import {toDateInputValue} from "@/lib/calculateCurrentStock";
 import {addMonths} from "@/lib/visitHelpers";
 import {
@@ -92,8 +93,6 @@ const VisitFormModal = ({
     setError("");
   }, [isOpen, item]);
 
-  if (!isOpen) return null;
-
   const handleTypeChange = (next: VisitFormType) => {
     setType(next);
     setProviderName("");
@@ -174,34 +173,41 @@ const VisitFormModal = ({
   };
 
   const fieldClass =
-    "w-full border border-[var(--mt-line)] bg-[var(--mt-bg)] px-4 py-3 outline-none transition focus:border-[var(--mt-accent)]";
+    "w-full min-w-0 border border-[var(--mt-line)] bg-[var(--mt-bg)] px-3 py-3 outline-none transition focus:border-[var(--mt-accent)] sm:px-4";
 
   const suggestions = VISIT_NAME_SUGGESTIONS[type];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--mt-ink)]/40 px-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto border border-[var(--mt-line)] bg-white p-7 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[var(--mt-muted)]">
-              Wizyty
-            </p>
-            <h2 className="font-display mt-1 text-2xl tracking-tight">
-              {isEditing ? "Edytuj wizytę" : "Dodaj wizytę"}
-            </h2>
-          </div>
-
+    <FormModalShell
+      isOpen={isOpen}
+      eyebrow="Wizyty"
+      title={isEditing ? "Edytuj wizytę" : "Dodaj wizytę"}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      footer={
+        <div className="flex gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="text-2xl leading-none text-[var(--mt-muted)] transition hover:text-[var(--mt-ink)]"
-            aria-label="Zamknij"
+            disabled={isSaving}
+            className="flex-1 border border-[var(--mt-line)] px-4 py-3.5 text-sm font-semibold text-[var(--mt-ink)] transition hover:border-[var(--mt-ink)] disabled:opacity-50"
           >
-            ×
+            Anuluj
+          </button>
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="flex-1 bg-[var(--mt-ink)] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--mt-accent)] disabled:opacity-50"
+          >
+            {isSaving
+              ? "Zapisywanie…"
+              : isEditing
+                ? "Zapisz zmiany"
+                : "Dodaj wizytę"}
           </button>
         </div>
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+      }
+    >
           <div>
             <label className="mb-2 block text-sm text-[var(--mt-muted)]">
               Kategoria
@@ -268,8 +274,8 @@ const VisitFormModal = ({
             disabled={isSaving}
           />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="min-w-0">
               <label className="mb-2 block text-sm text-[var(--mt-muted)]">
                 Ostatnia wizyta
               </label>
@@ -281,7 +287,7 @@ const VisitFormModal = ({
               />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="mb-2 block text-sm text-[var(--mt-muted)]">
                 Co ile miesięcy
               </label>
@@ -323,34 +329,10 @@ const VisitFormModal = ({
             />
           </div>
 
-          {error ? (
-            <p className="text-sm text-[var(--mt-signal)]">{error}</p>
-          ) : null}
-
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSaving}
-              className="flex-1 border border-[var(--mt-line)] px-4 py-3.5 text-sm font-semibold text-[var(--mt-ink)] transition hover:border-[var(--mt-ink)] disabled:opacity-50"
-            >
-              Anuluj
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="flex-1 bg-[var(--mt-ink)] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--mt-accent)] disabled:opacity-50"
-            >
-              {isSaving
-                ? "Zapisywanie…"
-                : isEditing
-                  ? "Zapisz zmiany"
-                  : "Dodaj wizytę"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      {error ? (
+        <p className="text-sm text-[var(--mt-signal)]">{error}</p>
+      ) : null}
+    </FormModalShell>
   );
 };
 
