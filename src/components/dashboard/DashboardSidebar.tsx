@@ -148,11 +148,14 @@ const DashboardSidebar = () => {
             }}
           />
         </div>
-        <nav
-          className="flex gap-1 overflow-x-auto px-3 pb-3"
-          aria-busy={isLoading || undefined}
-          aria-label="Nawigacja"
-        >
+      </div>
+
+      <nav
+        className="mt-rail fixed inset-x-0 bottom-0 z-30 border-t border-[var(--mt-line)] pb-[env(safe-area-inset-bottom)] lg:hidden"
+        aria-busy={isLoading || undefined}
+        aria-label="Nawigacja"
+      >
+        <div className="flex gap-1 overflow-x-auto px-2 pt-2 pb-2">
           {isLoading ? (
             <NavSkeleton variant="chip" />
           ) : (
@@ -166,27 +169,27 @@ const DashboardSidebar = () => {
                   key={link.href}
                   href={link.href}
                   data-active={isActive}
-                  className={`mt-nav-chip relative flex shrink-0 flex-col items-center gap-1.5 px-3 py-2 text-[0.7rem] transition ${
+                  className={`mt-nav-chip relative flex shrink-0 flex-col items-center gap-1 px-3 py-2 text-[0.7rem] transition ${
                     isActive
                       ? "font-medium text-[var(--mt-ink)]"
                       : "text-[var(--mt-muted)]"
                   }`}
                 >
+                  {isActive ? (
+                    <span className="absolute inset-x-3 top-0 h-[2px] bg-[var(--mt-accent)]" />
+                  ) : null}
                   <NavIcon id={link.icon} active={isActive} />
                   <span className="max-w-[4.5rem] truncate text-center">
                     {link.label === "Dokumenty osobiste"
                       ? "Dokumenty"
                       : link.label}
                   </span>
-                  {isActive ? (
-                    <span className="absolute inset-x-3 bottom-0 h-[2px] bg-[var(--mt-accent)]" />
-                  ) : null}
                 </Link>
               );
             })
           )}
-        </nav>
-      </div>
+        </div>
+      </nav>
 
       <aside className="mt-rail sticky top-0 hidden h-dvh max-h-dvh w-[17.5rem] shrink-0 flex-col overflow-hidden border-r border-[var(--mt-line)] lg:flex">
         <div className="shrink-0 px-6 pb-4 pt-6">
