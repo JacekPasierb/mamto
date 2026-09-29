@@ -260,7 +260,7 @@ const InsuranceFormModal = ({
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="min-w-0">
+            <div className="min-w-0 overflow-hidden">
               <label className="mb-2 block text-sm text-[var(--mt-muted)]">
                 Początek
               </label>
@@ -268,11 +268,11 @@ const InsuranceFormModal = ({
                 type="date"
                 value={startsAt}
                 onChange={(e) => setStartsAt(e.target.value)}
-                className={fieldClass}
+                className={`${fieldClass} mt-date-input`}
               />
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 overflow-hidden">
               <label className="mb-2 block text-sm text-[var(--mt-muted)]">
                 Koniec
               </label>
@@ -281,7 +281,7 @@ const InsuranceFormModal = ({
                 value={endsAt}
                 onChange={(e) => setEndsAt(e.target.value)}
                 required
-                className={fieldClass}
+                className={`${fieldClass} mt-date-input`}
               />
             </div>
           </div>

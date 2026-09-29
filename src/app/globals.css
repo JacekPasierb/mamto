@@ -509,3 +509,24 @@ iframe[src*="challenges.cloudflare.com"] {
   position: relative;
   z-index: 70;
 }
+
+/*
+  iOS Safari: input[type=date] ma natywną min-width i bywa szerszy niż inne pola.
+  appearance + twarde ograniczenie szerokości wyrównuje je do reszty formularza.
+*/
+input[type="date"].mt-date-input,
+input[type="date"] {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="date"].mt-date-input::-webkit-date-and-time-value,
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  min-width: 0;
+}
