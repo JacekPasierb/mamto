@@ -74,13 +74,19 @@ const PoradnikPage = () => {
           <div>
             <h1 className="font-display text-4xl tracking-tight">Poradnik</h1>
             <p className="mt-3 text-[var(--mt-muted)]">
-              Jak dodać MamTo do telefonu i włączyć powiadomienia push o
-              pilnych sprawach.
+              Jak dopasować MamTo do siebie, dodać je do telefonu i włączyć
+              powiadomienia o pilnych sprawach.
             </p>
           </div>
         </div>
 
         <nav className="mt-8 flex flex-wrap gap-x-5 gap-y-2 border-y border-[var(--mt-line)] py-4 text-sm">
+          <a
+            href="#moduly"
+            className="text-[var(--mt-accent)] underline-offset-4 hover:underline"
+          >
+            Twój panel
+          </a>
           <a
             href="#instalacja"
             className="text-[var(--mt-accent)] underline-offset-4 hover:underline"
@@ -102,8 +108,34 @@ const PoradnikPage = () => {
         </nav>
 
         <GuideBlock
-          id="instalacja"
+          id="moduly"
           eyebrow="Poradnik 01"
+          title="Dopasuj panel pod siebie"
+          lead="Nie musisz używać wszystkiego. Włącz tylko obszary, które naprawdę kontrolujesz — resztę wyłącz, żeby pulpit i menu były czyste."
+          steps={[
+            {
+              title: "Otwórz Ustawienia",
+              body: "W menu wybierz Ustawienia. Zobaczysz listę obszarów: Pojazdy, Ubezpieczenia, Dokumenty, Wizyty, Zwierzęta, Zapasy.",
+            },
+            {
+              title: "Włącz to, z czego korzystasz",
+              body: "Przełącznik w prawo = obszar aktywny. Pojawi się w menu, na pulpicie i w przypomnieniach. Przykład: masz auto i psa — włącz Pojazdy i Zwierzęta.",
+            },
+            {
+              title: "Wyłącz to, czego nie potrzebujesz",
+              body: "Przełącznik w lewo ukrywa obszar z nawigacji i pulpitu. Nie dostaniesz o nim powiadomień. Możesz wrócić i włączyć go później w każdej chwili.",
+            },
+            {
+              title: "Każde konto jest osobne",
+              body: "Twoja konfiguracja dotyczy tylko Twojego konta. Partner, rodzic czy znajomy ustawi u siebie własne obszary — pojazdy, wizyty, zwierzęta albo tylko zapasy.",
+            },
+          ]}
+          tip="Im mniej włączonych obszarów, tym spokojniejszy pulpit. Lepiej dodać coś później, niż mieć szum od razu."
+        />
+
+        <GuideBlock
+          id="instalacja"
+          eyebrow="Poradnik 02"
           title="Dodaj MamTo do pulpitu telefonu"
           lead="Po instalacji MamTo otwiera się jak aplikacja — pełny ekran, ikona na telefonie. To potrzebne zwłaszcza na iPhonie przy powiadomieniach."
           steps={[
@@ -133,9 +165,9 @@ const PoradnikPage = () => {
 
         <GuideBlock
           id="powiadomienia"
-          eyebrow="Poradnik 02"
+          eyebrow="Poradnik 03"
           title="Włącz powiadomienia push"
-          lead="Dostaniesz przypomnienie o sprawach po terminie i pilnych terminach — nawet gdy MamTo jest zamknięte."
+          lead="Dostaniesz przypomnienie o sprawach po terminie i pilnych terminach — nawet gdy MamTo jest zamknięte. Dotyczy tylko włączonych obszarów."
           steps={[
             {
               title: "Zainstaluj MamTo (iPhone obowiązkowo)",
@@ -155,10 +187,10 @@ const PoradnikPage = () => {
             },
             {
               title: "Kiedy dostaniesz push?",
-              body: "Gdy masz sprawy pilne lub po terminie. Przypomnienia wychodzą rano (ok. 7–8 czasu polskiego). Ten sam zestaw spraw nie wyśle się drugi raz tego samego dnia.",
+              body: "Gdy masz sprawy pilne lub po terminie w włączonych obszarach. Przypomnienia wychodzą rano (ok. 7–8 czasu polskiego). Ten sam zestaw spraw nie wyśle się drugi raz tego samego dnia.",
             },
           ]}
-          tip="Możesz też otworzyć Ustawienia i włączyć push od razu — link poniżej."
+          tip="Najpierw ustaw obszary pod siebie, potem włącz push — dostaniesz tylko to, co Cię dotyczy."
         />
 
         <div className="mt-10 flex flex-wrap gap-4 border-t border-[var(--mt-line)] pt-8">
@@ -166,7 +198,7 @@ const PoradnikPage = () => {
             href="/settings"
             className="bg-[var(--mt-ink)] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--mt-accent)]"
           >
-            Przejdź do ustawień powiadomień
+            Przejdź do ustawień
           </Link>
           <Link
             href="/dashboard"
